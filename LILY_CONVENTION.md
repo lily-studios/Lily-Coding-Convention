@@ -109,7 +109,7 @@ remote:FireServer({
 	value = value,
 	enabled = enabled,
 })
-```
+``````
 
 a cleanup should **not** silently change it to:
 
@@ -118,7 +118,7 @@ remote:FireServer({
 	amount = value,
 	active = enabled,
 })
-```
+``````
 
 Even if the new names seem better, that is a behavior/API change.
 
@@ -148,25 +148,25 @@ Lily uses `camelCase` for normal variables, functions, fields, and module method
 ### Good
 
 ```lua
-local profileToken
-local selectedItems
-local colorBrightness
-local poolController
+local fooKey
+local barList
+local fooValue
+local fooController
 
-local function updateColor()
+local function updateFoo()
 end
 
 function module.setActiveProfile()
 end
-```
+``````
 
 ### Avoid
 
 ```lua
 local ProfileToken
-local selected_items
+local selected_bars
 local COLORBRIGHTNESS
-```
+``````
 
 ### Quick rule
 
@@ -183,10 +183,10 @@ Do not shorten names unless the short name is already a very common technical te
 ```lua
 local player
 local connection
-local controller
-local profileToken
-local selectedItems
-```
+local fooController
+local fooKey
+local barList
+``````
 
 ### Avoid
 
@@ -196,7 +196,7 @@ local conn
 local ctrl
 local prof
 local sel
-```
+``````
 
 ### Why
 
@@ -220,7 +220,7 @@ local isFirstRun
 local hasAccess
 local shouldUpdate
 local wasCalled
-```
+``````
 
 ### Avoid
 
@@ -229,7 +229,7 @@ local running
 local first
 local access
 local flag
-```
+``````
 
 ### Why
 
@@ -237,7 +237,7 @@ This makes conditions easier to read:
 
 ```lua
 if hasAccess then
-```
+``````
 
 reads naturally.
 
@@ -250,22 +250,22 @@ Functions should usually start with a verb.
 ### Good
 
 ```lua
-updatePool()
+updateFoo()
 createObject()
 destroyContext()
 sendInput()
 resolveProfile()
-releasePressedKeys()
-```
+releaseFoo()
+``````
 
 ### Avoid
 
 ```lua
-pool()
+foo()
 objectThing()
-contextData()
+fooContextData()
 inputStuff()
-```
+``````
 
 ---
 
@@ -281,7 +281,7 @@ onInputEnded()
 onClick()
 onRemoteEvent()
 onAttributeChanged()
-```
+``````
 
 ### Avoid
 
@@ -290,7 +290,7 @@ input()
 click()
 remote()
 changed()
-```
+``````
 
 ### Quick rule
 
@@ -307,28 +307,28 @@ A guard clause exits a function early when a required condition is not met.
 ## Good
 
 ```lua
-local function updatePool(context)
-	if not context then return end
-	if context.destroyed then return end
-	if not context.pool then return end
+local function updateFoo(fooContext)
+	if not fooContext then return end
+	if fooContext.destroyed then return end
+	if not fooContext.foo then return end
 
-	context.pool.Enabled = true
+	fooContext.foo.Enabled = true
 end
-```
+``````
 
 ## Avoid
 
 ```lua
-local function updatePool(context)
-	if context then
-		if not context.destroyed then
-			if context.pool then
-				context.pool.Enabled = true
+local function updateFoo(fooContext)
+	if fooContext then
+		if not fooContext.destroyed then
+			if fooContext.foo then
+				fooContext.foo.Enabled = true
 			end
 		end
 	end
 end
-```
+``````
 
 ## Why
 
@@ -349,30 +349,30 @@ Guard clauses are good only when they protect a real condition.
 ### Avoid
 
 ```lua
-local function sendInput(context, keyCode, pressed)
-	if not context then return end
-	if not context.remote then return end
-	if not context.remote.Parent then return end
+local function sendInput(fooContext, keyCode, pressed)
+	if not fooContext then return end
+	if not fooContext.remote then return end
+	if not fooContext.remote.Parent then return end
 
-	context.remote:FireServer({
+	fooContext.remote:FireServer({
 		keyCode = keyCode,
 		pressed = pressed,
 	})
 end
-```
+``````
 
 If the caller already guarantees a valid context and remote, keep the function simple:
 
 ### Better
 
 ```lua
-local function sendInput(context, keyCode, pressed)
-	context.remote:FireServer({
+local function sendInput(fooContext, keyCode, pressed)
+	fooContext.remote:FireServer({
 		keyCode = keyCode,
 		pressed = pressed,
 	})
 end
-```
+``````
 
 ### Quick rule
 
@@ -389,21 +389,21 @@ This is a hard style preference.
 ## Avoid
 
 ```lua
-if context then
-	if pool then
-		updatePool(pool)
+if fooContext then
+	if foo then
+		updateFoo(foo)
 	end
 end
-```
+``````
 
 ## Prefer
 
 ```lua
-if not context then return end
-if not pool then return end
+if not fooContext then return end
+if not foo then return end
 
-updatePool(pool)
-```
+updateFoo(foo)
+``````
 
 ---
 
@@ -414,25 +414,25 @@ Use `continue` instead of nesting.
 ### Avoid
 
 ```lua
-for _, item in pool do
-	if item.Parent then
-		if not item:GetAttribute("Disabled") then
-			updateItem(item)
+for _, bar in foo do
+	if bar.Parent then
+		if not bar:GetAttribute("Disabled") then
+			updateItem(bar)
 		end
 	end
 end
-```
+``````
 
 ### Prefer
 
 ```lua
-for _, item in pool do
-	if not item.Parent then continue end
-	if item:GetAttribute("Disabled") then continue end
+for _, bar in foo do
+	if not bar.Parent then continue end
+	if bar:GetAttribute("Disabled") then continue end
 
-	updateItem(item)
+	updateItem(bar)
 end
-```
+``````
 
 ---
 
@@ -445,31 +445,31 @@ Extract a small helper.
 Instead of:
 
 ```lua
-if context then
-	if context.pool then
-		if context.pool.Enabled then
-			updatePool(context.pool)
+if fooContext then
+	if fooContext.foo then
+		if fooContext.foo.Enabled then
+			updateFoo(fooContext.foo)
 		end
 	end
 end
-```
+``````
 
 write:
 
 ```lua
-local function canUpdatePool(context)
-	if not context then return false end
-	if not context.pool then return false end
+local function canUpdateFoo(fooContext)
+	if not fooContext then return false end
+	if not fooContext.foo then return false end
 
-	return context.pool.Enabled
+	return fooContext.foo.Enabled
 end
 
 --————————————————————————————————————————————————————————————————————--
 
-if not canUpdatePool(context) then return end
+if not canUpdateFoo(fooContext) then return end
 
-updatePool(context.pool)
-```
+updateFoo(fooContext.foo)
+``````
 
 ### Quick rule
 
@@ -489,22 +489,22 @@ Lily prefers flat control flow.
 
 ```lua
 if enabled then
-	startPool()
+	startFoo()
 else
-	stopPool()
+	stopFoo()
 end
-```
+``````
 
 ### Prefer
 
 ```lua
 if enabled then
-	startPool()
+	startFoo()
 	return
 end
 
-stopPool()
-```
+stopFoo()
+``````
 
 ---
 
@@ -520,7 +520,7 @@ elseif mode == "Even" then
 elseif mode == "Odd" then
 	selectOdd()
 end
-```
+``````
 
 ### Prefer a lookup when it fits
 
@@ -535,7 +535,7 @@ local handler = handlers[mode]
 if not handler then return end
 
 handler()
-```
+``````
 
 ### Why
 
@@ -555,29 +555,29 @@ Prefer positive names and positive conditions.
 
 ```lua
 if isRunning then
-	updatePool()
+	updateFoo()
 end
-```
+``````
 
 ## Avoid
 
 ```lua
 if not isNotRunning then
-	updatePool()
+	updateFoo()
 end
-```
+``````
 
 ## Good
 
 ```lua
 local hasValue = value ~= nil
-```
+``````
 
 ## Avoid
 
 ```lua
 local isMissingValue = value == nil
-```
+``````
 
 Use the positive form unless the negative state is the real concept.
 
@@ -609,13 +609,13 @@ Do not write loops that repeatedly check state.
 
 ```lua
 while true do
-	if pool.Enabled then
-		updatePool()
+	if foo.Enabled then
+		updateFoo()
 	end
 
 	task.wait()
 end
-```
+``````
 
 ### Avoid
 
@@ -626,7 +626,7 @@ while task.wait(.1) do
 		updateValue(object.Value)
 	end
 end
-```
+``````
 
 ### Prefer
 
@@ -634,7 +634,7 @@ end
 object:GetPropertyChangedSignal("Value"):Connect(function()
 	updateValue(object.Value)
 end)
-```
+``````
 
 ---
 
@@ -646,9 +646,9 @@ If Roblox already provides a signal for the change, use it.
 
 ```lua
 object:GetPropertyChangedSignal("Enabled"):Connect(function()
-	updatePool(object.Enabled)
+	updateFoo(object.Enabled)
 end)
-```
+``````
 
 ### Attributes
 
@@ -656,7 +656,7 @@ end)
 object:GetAttributeChangedSignal("active"):Connect(function()
 	updateState(object:GetAttribute("active"))
 end)
-```
+``````
 
 ### Value objects
 
@@ -664,7 +664,7 @@ end)
 valueObject.Changed:Connect(function(value)
 	updateValue(value)
 end)
-```
+``````
 
 ### Remote events
 
@@ -672,14 +672,14 @@ end)
 remote.OnClientEvent:Connect(function(arguments)
 	updateState(arguments)
 end)
-```
+``````
 
 ### Input
 
 ```lua
 userInputService.InputBegan:Connect(onInputBegan)
 userInputService.InputEnded:Connect(onInputEnded)
-```
+``````
 
 ### Quick rule
 
@@ -695,25 +695,25 @@ Do not use `Heartbeat`, `RenderStepped`, or `Stepped` just to check whether norm
 
 ```lua
 runService.Heartbeat:Connect(function()
-	if context.value ~= lastValue then
-		lastValue = context.value
-		updateValue(context.value)
+	if fooContext.value ~= lastValue then
+		lastValue = fooContext.value
+		updateValue(fooContext.value)
 	end
 end)
-```
+``````
 
 ### Prefer
 
 Call `updateValue()` at the point where the value changes, or connect to the signal that reports the change.
 
 ```lua
-local function setValue(context, value)
-	if context.value == value then return end
+local function setValue(fooContext, value)
+	if fooContext.value == value then return end
 
-	context.value = value
-	updateValue(context)
+	fooContext.value = value
+	updateValue(fooContext)
 end
-```
+``````
 
 ---
 
@@ -733,13 +733,13 @@ Those are valid uses of:
 
 ```lua
 runService.Heartbeat
-```
+``````
 
 or:
 
 ```lua
 runService.RenderStepped
-```
+``````
 
 Do not use a frame connection for ordinary state watching.
 
@@ -758,10 +758,10 @@ A one-time iteration is fine when Lily actually needs to process several items.
 ### Good
 
 ```lua
-for _, item in items do
-	disconnectItem(item)
+for _, bar in bars do
+	disconnectItem(bar)
 end
-```
+``````
 
 ### Good
 
@@ -769,7 +769,7 @@ end
 for key, value in data do
 	copy[key] = value
 end
-```
+``````
 
 What Lily avoids is a loop whose job is to repeatedly wait and check for changes.
 
@@ -784,24 +784,24 @@ Lily uses generalized Luau iteration.
 ```lua
 for key, value in data do
 end
-```
+``````
 
 ```lua
-for index, item in items do
+for index, bar in bars do
 end
-```
+``````
 
 ### Avoid
 
 ```lua
 for key, value in pairs(data) do
 end
-```
+``````
 
 ```lua
-for index, item in ipairs(items) do
+for index, bar in ipairs(bars) do
 end
-```
+``````
 
 ### Quick rule
 
@@ -816,13 +816,13 @@ The best place to react is as close as possible to the place where the state cha
 ### Good
 
 ```lua
-local function setEnabled(context, enabled)
-	if context.enabled == enabled then return end
+local function setEnabled(fooContext, enabled)
+	if fooContext.enabled == enabled then return end
 
-	context.enabled = enabled
-	updateViews(context)
+	fooContext.enabled = enabled
+	updateViews(fooContext)
 end
-```
+``````
 
 This is better than storing the value and having another system constantly inspect it.
 
@@ -843,8 +843,8 @@ state setter runs
     ↓
 state updates
     ↓
-views / remotes / effects react
-```
+bars / remotes / foos react
+``````
 
 This makes the data flow easy to understand.
 
@@ -864,7 +864,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-```
+``````
 
 Do not create signals without a clear cleanup path.
 
@@ -895,15 +895,15 @@ A function should have one clear job.
 ## Good
 
 ```lua
-local function sendColor()
+local function sendFoo()
 end
 
-local function syncColorFaders()
+local function syncFooValues()
 end
 
-local function updateColorViews()
+local function updateFooViews()
 end
-```
+``````
 
 ## Avoid
 
@@ -936,7 +936,7 @@ A helper should reduce at least one of these:
 local function enableObject(object)
 	object.Enabled = true
 end
-```
+``````
 
 if it is used once and adds no meaning.
 
@@ -950,7 +950,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-```
+``````
 
 This is useful because the cleanup behavior is repeated and meaningful.
 
@@ -979,19 +979,19 @@ Function calls should be obvious when read.
 ### Avoid
 
 ```lua
-updatePool(pool, true, false)
-```
+updateFoo(foo, true, false)
+``````
 
 The reader cannot easily tell what `true` and `false` mean.
 
 ### Prefer
 
 ```lua
-updatePool(pool, {
+updateFoo(foo, {
 	replicate = true,
 	force = false,
 })
-```
+``````
 
 ---
 
@@ -1000,16 +1000,16 @@ updatePool(pool, {
 ### Avoid
 
 ```lua
-createPool(name, nil, true)
-```
+createFoo(name, nil, true)
+``````
 
 ### Prefer
 
 ```lua
-createPool(name, {
+createFoo(name, {
 	enabled = true,
 })
-```
+``````
 
 ---
 
@@ -1021,7 +1021,7 @@ Simple functions can stay simple:
 
 ```lua
 setBrightness(value)
-```
+``````
 
 ### Quick rule
 
@@ -1042,16 +1042,16 @@ Prefer state owned by the module, feature, profile, or object.
 ### Good
 
 ```lua
-local contexts = {}
-```
+local fooContexts = {}
+``````
 
 ```lua
-contexts[profileToken] = {
+fooContexts[fooKey] = {
 	connections = {},
-	selectedItems = {},
+	barList = {},
 	destroyed = false,
 }
-```
+``````
 
 ---
 
@@ -1063,15 +1063,15 @@ If several profiles, pools, controllers, or effects can exist at the same time, 
 
 ```lua
 local currentValue = 0
-```
+``````
 
 when multiple independent objects need their own value.
 
 ### Better
 
 ```lua
-contexts[profileToken].value = 0
-```
+fooContexts[fooKey].value = 0
+``````
 
 ---
 
@@ -1123,7 +1123,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-```
+``````
 
 ---
 
@@ -1132,8 +1132,8 @@ end
 When a context is destroyed:
 
 ```lua
-contexts[profileToken] = nil
-```
+fooContexts[fooKey] = nil
+``````
 
 Do not keep stale entries.
 
@@ -1190,7 +1190,7 @@ Lily files should use a predictable top-level order.
 ```lua
 --!strict
 
--- handles pool input
+-- handles foo input
 
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local userInputService = game:GetService("UserInputService")
@@ -1201,11 +1201,11 @@ local module = {}
 
 --————————————————————————————————————————————————————————————————————--
 
-local inputProfile = "Foo"
+local fooProfile = "Foo"
 
 --————————————————————————————————————————————————————————————————————--
 
-local contexts = {}
+local fooContexts = {}
 
 --————————————————————————————————————————————————————————————————————--
 
@@ -1219,20 +1219,20 @@ type Context = {
 
 --————————————————————————————————————————————————————————————————————--
 
-local function getContext(profileToken: string): Context?
-	return contexts[profileToken]
+local function getContext(fooKey: string): Context?
+	return fooContexts[fooKey]
 end
 
 --————————————————————————————————————————————————————————————————————--
 
-function module.setup(profileToken: string): boolean
+function module.setup(fooKey: string): boolean
 	return true
 end
 
 --————————————————————————————————————————————————————————————————————--
 
 return module
-```
+``````
 
 ### Why
 
@@ -1246,7 +1246,7 @@ Use the standard Lily separator:
 
 ```lua
 --————————————————————————————————————————————————————————————————————--
-```
+``````
 
 Use it between:
 
@@ -1266,7 +1266,7 @@ local function bar()
 end
 
 --————————————————————————————————————————————————————————————————————--
-```
+``````
 
 ### Quick rule
 
@@ -1285,24 +1285,24 @@ Lily formatting should be compact but not cramped.
 ### Good
 
 ```lua
-local function setState(context, value)
-	context.value = value
-	updateViews(context)
+local function setState(fooContext, value)
+	fooContext.value = value
+	updateViews(fooContext)
 end
-```
+``````
 
 ### Avoid
 
 ```lua
-local function setState(context, value)
+local function setState(fooContext, value)
 
-	context.value = value
+	fooContext.value = value
 
 
-	updateViews(context)
+	updateViews(fooContext)
 
 end
-```
+``````
 
 ---
 
@@ -1313,7 +1313,7 @@ end
 ```lua
 local x = math.clamp((mouseX - position.X) / size.X, 0, 1)
 local y = math.clamp((mouseY - position.Y) / size.Y, 0, 1)
-```
+``````
 
 ### Avoid
 
@@ -1323,7 +1323,7 @@ local x = math.clamp(
 	0,
 	1
 )
-```
+``````
 
 when the one-line version is still easy to read.
 
@@ -1340,7 +1340,7 @@ local button = interface.TextButton(parent, {
 	Text = title,
 	TextSize = 33,
 })
-```
+``````
 
 ### Quick rule
 
@@ -1362,7 +1362,7 @@ Production Lily modules should normally start with:
 
 ```lua
 --!strict
-```
+``````
 
 ### Why
 
@@ -1385,18 +1385,18 @@ before the code runs.
 ### Good
 
 ```lua
-local function getContext(profileToken: string): Context?
-	return contexts[profileToken]
+local function getContext(fooKey: string): Context?
+	return fooContexts[fooKey]
 end
-```
+``````
 
 ### Avoid when the type is already known
 
 ```lua
-local function getContext(profileToken)
-	return contexts[profileToken]
+local function getContext(fooKey)
+	return fooContexts[fooKey]
 end
-```
+``````
 
 ---
 
@@ -1405,15 +1405,15 @@ end
 ### Good
 
 ```lua
-function module.setup(profileToken: string): boolean
+function module.setup(fooKey: string): boolean
 	return true
 end
-```
+``````
 
 ```lua
-local function updatePool(pool: Pool): ()
+local function updateFoo(foo: Foo): ()
 end
-```
+``````
 
 ### Why
 
@@ -1426,20 +1426,20 @@ Return types make public APIs easier to understand and harder to accidentally ch
 ### Good
 
 ```lua
-export type Pool = {
+export type Foo = {
 	name: string,
 	enabled: boolean,
-	items: { Instance },
+	bars: { Instance },
 }
-```
+``````
 
 ```lua
 type Context = {
-	profileToken: string,
+	fooKey: string,
 	remote: RemoteEvent,
 	connections: { RBXScriptConnection },
 }
-```
+``````
 
 ### Avoid
 
@@ -1452,12 +1452,12 @@ Repeating a large anonymous table type in many functions.
 Use `export type` when another module needs the type.
 
 ```lua
-export type Personality = {
+export type FooData = {
 	name: string,
 	title: string,
 	category: string,
 }
-```
+``````
 
 Keep internal implementation types private when outside code does not need them.
 
@@ -1468,10 +1468,10 @@ Keep internal implementation types private when outside code does not need them.
 ### Good
 
 ```lua
-local contexts: { [string]: Context } = {}
+local fooContexts: { [string]: Context } = {}
 local connections: { RBXScriptConnection } = {}
-local selectedItems: { number } = {}
-```
+local barList: { number } = {}
+``````
 
 ### Why
 
@@ -1484,13 +1484,13 @@ Typed collections prevent accidental insertion of the wrong value.
 If a value can really be missing:
 
 ```lua
-local activeProfileToken: string?
-```
+local activeFooKey: string?
+``````
 
 ```lua
-local function getContext(profileToken: string): Context?
+local function getContext(fooKey: string): Context?
 end
-```
+``````
 
 Do not make everything optional just to avoid type errors.
 
@@ -1509,7 +1509,7 @@ local function useRemote(remote: Instance?)
 
 	remote:FireServer()
 end
-```
+``````
 
 After the guards, Luau understands that `remote` is a `RemoteEvent`.
 
@@ -1523,14 +1523,14 @@ Do not use `any` just to silence the type checker.
 
 ```lua
 local value: any = arguments.value
-```
+``````
 
 ### Prefer
 
 ```lua
 local value: unknown = arguments.value
 if type(value) ~= "number" then return end
-```
+``````
 
 ---
 
@@ -1540,7 +1540,7 @@ if type(value) ~= "number" then return end
 
 ```lua
 local remote = object :: RemoteEvent
-```
+``````
 
 when the object has not been verified.
 
@@ -1550,7 +1550,7 @@ when the object has not been verified.
 if not object:IsA("RemoteEvent") then return end
 
 local remote = object
-```
+``````
 
 Use casts only when the architecture guarantees the type and Luau cannot infer it.
 
@@ -1580,7 +1580,7 @@ local function onRemote(arguments: unknown)
 
 	updateValue(value)
 end
-```
+``````
 
 ### Quick rule
 
@@ -1615,7 +1615,7 @@ local httpService = game:GetService("HttpService")
 local players = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local serverScriptService = game:GetService("ServerScriptService")
-```
+``````
 
 Only request services the file actually uses.
 
@@ -1634,7 +1634,7 @@ Comments should explain **why**, not repeat **what**.
 ```lua
 -- set enabled to true
 enabled = true
-```
+``````
 
 The code already says that.
 
@@ -1642,8 +1642,8 @@ The code already says that.
 
 ```lua
 -- Release old held inputs before switching profiles so they cannot stay active.
-releasePressedKeys()
-```
+releaseFoo()
+``````
 
 ### Good comment topics
 
@@ -1670,12 +1670,12 @@ Use errors for real programming problems, not normal control flow.
 Return a status.
 
 ```lua
-function module.setup(profileToken: string): boolean
-	if profileToken == "" then return false end
+function module.setup(fooKey: string): boolean
+	if fooKey == "" then return false end
 
 	return true
 end
-```
+``````
 
 ---
 
@@ -1684,8 +1684,8 @@ end
 Use `assert` when an invariant must be true.
 
 ```lua
-assert(type(definitions) == "table", "Definitions must return a table.")
-```
+assert(type(fooData) == "table", "Definitions must return a table.")
+``````
 
 ---
 
@@ -1724,8 +1724,8 @@ Avoid repeatedly searching the hierarchy in hot code.
 ### Avoid
 
 ```lua
-local object = workspace.Stage.Pool.Item
-```
+local object = workspace.Stage.Foo.Item
+``````
 
 inside a per-frame loop when the reference can be cached once.
 
@@ -1792,7 +1792,7 @@ A common error looks like:
 ```text
 Out of local registers
 exceeded limit 200
-```
+``````
 
 This can happen when a very large file contains too many top-level locals and local functions.
 
@@ -1811,7 +1811,7 @@ end
 
 local function baz()
 end
-```
+``````
 
 repeated hundreds of times, cold internal helpers can be grouped:
 
@@ -1823,7 +1823,7 @@ end
 
 function internals.bar()
 end
-```
+``````
 
 ---
 
@@ -1847,7 +1847,7 @@ Lily does not use chained `and/or` expressions as control flow.
 
 ```lua
 local value = condition and firstValue or secondValue
-```
+``````
 
 Especially avoid long chains:
 
@@ -1856,7 +1856,7 @@ local result = firstCondition and firstValue
 	or secondCondition and secondValue
 	or thirdCondition and thirdValue
 	or nil
-```
+``````
 
 ---
 
@@ -1876,7 +1876,7 @@ if secondCondition then
 end
 
 return thirdValue
-```
+``````
 
 ### Why
 
@@ -1895,11 +1895,11 @@ Prefer combining focused systems instead of building deep inheritance trees.
 ## Generic Example
 
 ```text
-Pool
-+ PoolController
-+ FooEngine
+Foo
 + FooController
-```
++ BarEngine
++ BazController
+``````
 
 Each part has a clear responsibility.
 
@@ -1926,14 +1926,14 @@ Public state should be controlled when direct mutation could break rules.
 ## Good
 
 ```lua
-function controller:getValue(): number
+function fooController:getValue(): number
 	return self.value
 end
 
-function controller:setValue(value: number)
+function fooController:setValue(value: number)
 	self.value = math.max(value, 0)
 end
-```
+``````
 
 This makes the allowed state change clear.
 
@@ -1959,7 +1959,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-```
+``````
 
 This can work for several feature owners.
 
@@ -1988,21 +1988,21 @@ These patterns should usually be removed during review.
 ### Avoid
 
 ```lua
-if context then
-	if pool then
-		updatePool(pool)
+if fooContext then
+	if foo then
+		updateFoo(foo)
 	end
 end
-```
+``````
 
 ### Prefer
 
 ```lua
-if not context then return end
-if not pool then return end
+if not fooContext then return end
+if not foo then return end
 
-updatePool(pool)
-```
+updateFoo(foo)
+``````
 
 ---
 
@@ -2012,7 +2012,7 @@ updatePool(pool)
 
 ```lua
 local value = condition and foo or bar
-```
+``````
 
 ---
 
@@ -2021,9 +2021,9 @@ local value = condition and foo or bar
 ### Avoid
 
 ```lua
-if not context then return end
-if not context.remote then return end
-```
+if not fooContext then return end
+if not fooContext.remote then return end
+``````
 
 when the caller already guarantees both.
 
@@ -2037,7 +2037,7 @@ when the caller already guarantees both.
 local ctx
 local obj
 local mgr
-```
+``````
 
 Prefer names that explain the value.
 
@@ -2048,8 +2048,8 @@ Prefer names that explain the value.
 ### Avoid
 
 ```lua
-updatePool(pool, true, false, true)
-```
+updateFoo(foo, true, false, true)
+``````
 
 ---
 
@@ -2061,7 +2061,7 @@ updatePool(pool, true, false, true)
 local function setTrue(data)
 	data.value = true
 end
-```
+``````
 
 if the helper adds no meaning.
 
@@ -2086,7 +2086,7 @@ while true do
 
 	task.wait()
 end
-```
+``````
 
 ### Prefer
 
@@ -2094,7 +2094,7 @@ end
 valueObject.Changed:Connect(function(value)
 	updateValue(value)
 end)
-```
+``````
 
 The system should react to the change instead of repeatedly checking for it.
 
@@ -2107,24 +2107,24 @@ The system should react to the change instead of repeatedly checking for it.
 ```lua
 for key, value in pairs(data) do
 end
-```
+``````
 
 ```lua
-for index, item in ipairs(items) do
+for index, bar in ipairs(bars) do
 end
-```
+``````
 
 ### Prefer
 
 ```lua
 for key, value in data do
 end
-```
+``````
 
 ```lua
-for index, item in items do
+for index, bar in bars do
 end
-```
+``````
 
 ---
 
@@ -2149,7 +2149,7 @@ alive after destruction.
 
 ```lua
 local data: any
-```
+``````
 
 just to stop type errors.
 
@@ -2161,7 +2161,7 @@ just to stop type errors.
 
 ```lua
 local remote = object :: RemoteEvent
-```
+``````
 
 without a real guarantee.
 
@@ -2172,20 +2172,20 @@ without a real guarantee.
 ```lua
 --!strict
 
-local function updatePoolState(context: Context, poolName: string, enabled: boolean)
-	context.activePools[poolName] = nil
-	if enabled then context.activePools[poolName] = true end
+local function updateFooState(fooContext: Context, fooName: string, enabled: boolean)
+	fooContext.activeFoos[fooName] = nil
+	if enabled then fooContext.activeFoos[fooName] = true end
 
-	for _, view in context.views do
-		local buttonData = view.buttons[poolName]
-		if not buttonData then continue end
-		if buttonData.enabled == enabled then continue end
+	for _, view in fooContext.bars do
+		local baz = view.bazMap[fooName]
+		if not baz then continue end
+		if baz.enabled == enabled then continue end
 
-		buttonData.enabled = enabled
-		moveBar(buttonData, enabled)
+		baz.enabled = enabled
+		updateBaz(baz, enabled)
 	end
 end
-```
+``````
 
 ## Why this matches Lily style
 
@@ -2206,7 +2206,7 @@ end
 ```lua
 --!strict
 
--- handles pool input
+-- handles foo input
 
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local userInputService = game:GetService("UserInputService")
@@ -2218,13 +2218,13 @@ local module = {}
 --————————————————————————————————————————————————————————————————————--
 
 type Context = {
-	profileToken: string,
+	fooKey: string,
 	remote: RemoteEvent,
 }
 
 --————————————————————————————————————————————————————————————————————--
 
-local contexts: { [string]: Context } = {}
+local fooContexts: { [string]: Context } = {}
 local connections: { RBXScriptConnection } = {}
 
 --————————————————————————————————————————————————————————————————————--
@@ -2238,12 +2238,12 @@ end
 
 --————————————————————————————————————————————————————————————————————--
 
-local function getContext(profileToken: string): Context?
-	local context = contexts[profileToken]
-	if not context then return end
-	if not context.remote.Parent then return end
+local function getContext(fooKey: string): Context?
+	local fooContext = fooContexts[fooKey]
+	if not fooContext then return end
+	if not fooContext.remote.Parent then return end
 
-	return context
+	return fooContext
 end
 
 --————————————————————————————————————————————————————————————————————--
@@ -2258,20 +2258,20 @@ end
 
 --————————————————————————————————————————————————————————————————————--
 
-function module.setup(profileToken: string): boolean
-	if profileToken == "" then return false end
-	if getContext(profileToken) then return true end
+function module.setup(fooKey: string): boolean
+	if fooKey == "" then return false end
+	if getContext(fooKey) then return true end
 
 	return true
 end
 
 --————————————————————————————————————————————————————————————————————--
 
-function module.destroy(profileToken: string)
-	if not contexts[profileToken] then return end
+function module.destroy(fooKey: string)
+	if not fooContexts[fooKey] then return end
 
-	contexts[profileToken] = nil
-	if next(contexts) then return end
+	fooContexts[fooKey] = nil
+	if next(fooContexts) then return end
 
 	disconnectInput()
 end
@@ -2279,7 +2279,7 @@ end
 --————————————————————————————————————————————————————————————————————--
 
 return module
-```
+``````
 
 ---
 
