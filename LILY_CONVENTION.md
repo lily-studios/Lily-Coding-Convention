@@ -10,6 +10,9 @@ Lily code should always favor **clarity, consistency, predictable behavior, simp
 >
 > **Clear first. Compact second. Clever never.**
 
+> [!IMPORTANT]
+> **Lily Studio code should be direct, controlled, predictable, typed, efficient, and fully owned throughout its lifecycle.** Important behavior should never depend on hidden setup, accidental timing, unclear ownership, or uncontrolled background work.
+
 The wording used in Lily documentation should follow the same standard as the code itself: **precise, professional, and understandable without being oversimplified**. Sentences should provide enough context to explain the reasoning behind a rule, while avoiding unnecessary jargon or academic wording that makes a practical engineering standard harder to use.
 
 
@@ -21,48 +24,48 @@ The wording used in Lily documentation should follow the same standard as the co
   - [1. Purpose](#1-purpose)
   - [2. General Principles](#2-general-principles)
   - [3. Preserve Existing Behavior](#3-preserve-existing-behavior)
-  - [4. Controlled and Predictable Behavior](#4-controlled-and-predictable-behavior)
+  - [4. **controlled and predictable behavior**](#4-controlled-and-predictable-behavior)
 - **Architecture and Dependencies**
-  - [5. ModuleScript-First Architecture](#5-modulescript-first-architecture)
-  - [6. Lily Packages Only](#6-lily-packages-only)
+  - [5. **ModuleScript-first architecture**](#5-**ModuleScript**-first-architecture)
+  - [6. **Lily packages** Only](#6-lily-packages-only)
   - [7. Composition Over Inheritance](#7-composition-over-inheritance)
   - [8. Generic Solutions](#8-generic-solutions)
 - **State, Change, and Lifecycle**
-  - [9. State Ownership](#9-state-ownership)
+  - [9. **state ownership**](#9-state-ownership)
   - [10. Public State](#10-public-state)
-  - [11. Attributes Over ValueObjects](#11-attributes-over-valueobjects)
-  - [12. Event-Driven Code](#12-event-driven-code)
-  - [13. Cleanup and Lifecycle](#13-cleanup-and-lifecycle)
+  - [11. **Attributes** Over **ValueObjects**](#11-**Attributes**-over-**ValueObjects**)
+  - [12. **event-driven** Code](#12-**event-driven**-code)
+  - [13. **cleanup** and **lifecycle**](#13-**cleanup**-and-**lifecycle**)
 - **Functions and Control Flow**
   - [14. Naming](#14-naming)
   - [15. Functions](#15-functions)
   - [16. Function Arguments](#16-function-arguments)
-  - [17. Prefer Table-Driven Design](#17-prefer-table-driven-design)
-  - [18. Guard Clauses](#17-guard-clauses)
-  - [19. No Conditional Nesting](#18-no-conditional-nesting)
-  - [20. Avoid `else` and `elseif`](#19-avoid-else-and-elseif)
-  - [21. Positive Conditions](#20-positive-conditions)
-  - [22. Avoid Boolean Expression Control Flow](#21-avoid-boolean-expression-control-flow)
-  - [23. Iteration](#22-iteration)
+  - [17. Prefer **table-driven design**](#17-prefer-**table-driven**-design)
+  - [18. **guard clauses**](#18-guard-clauses)
+  - [19. No **conditional nesting**](#19-no-conditional-nesting)
+  - [20. Avoid `else` and `elseif`](#20-avoid-else-and-elseif)
+  - [21. Positive Conditions](#21-positive-conditions)
+  - [22. Avoid Boolean Expression Control Flow](#22-avoid-boolean-expression-control-flow)
+  - [23. Iteration](#23-iteration)
 - **Types, Documentation, and Failures**
-  - [24. Type Checking](#23-type-checking)
-  - [25. Comments and Documentation](#24-comments-and-documentation)
-  - [26. Error Handling](#25-error-handling)
+  - [24. Type Checking](#24-type-checking)
+  - [25. Comments and Documentation](#25-comments-and-documentation)
+  - [26. Error Handling](#26-error-handling)
 - **File Layout and Source Organization**
-  - [27. File Organization](#26-file-organization)
-  - [28. Alphabetical Top-Level Order](#27-alphabetical-top-level-order)
-  - [29. Lily Separators](#28-lily-separators)
-  - [30. Formatting](#29-formatting)
-- **User Interface**
-  - [31. Script-Created Runtime Infrastructure](#30-script-created-runtime-infrastructure)
+  - [27. File Organization](#27-file-organization)
+  - [28. Alphabetical Top-Level Order](#28-alphabetical-top-level-order)
+  - [29. Lily Separators](#29-lily-separators)
+  - [30. Formatting](#30-formatting)
+- **Runtime Infrastructure and User Interface**
+  - [31. **Script-created runtime infrastructure**](#31-script-created-runtime-infrastructure)
 - **Performance and Scale**
-  - [32. Performance](#31-performance)
-  - [33. Luau Local and Register Limits](#32-luau-local-and-register-limits)
+  - [32. Performance](#32-performance)
+  - [33. Luau Local and Register Limits](#33-luau-local-and-register-limits)
 - **Reference Examples**
-  - [34. Common Lily Anti-Patterns](#33-common-lily-anti-patterns)
-  - [35. Example Lily Function](#34-example-lily-function)
-  - [36. Example Lily Module](#35-example-lily-module)
-  - [37. Final Standard](#36-final-standard)
+  - [34. Common Lily Anti-Patterns](#34-common-lily-anti-patterns)
+  - [35. Example Lily Function](#35-example-lily-function)
+  - [36. Example Lily Module](#36-example-lily-module)
+  - [37. Final Standard](#37-final-standard)
 
 ---
 
@@ -104,7 +107,7 @@ Lily code should normally be:
 - **event-driven**, because code should react when something changes instead of repeatedly checking for change
 - **modular**, because features should be separated into focused reusable modules
 - **predictable**, because similar systems should use similar patterns
-- **cleanable**, because every connection, object, task, and runtime state should have a clear lifecycle
+- **cleanable**, because every connection, object, task, and runtime state should have a clear **lifecycle**
 - **performant**, because repeated small costs can become large in a large Roblox project
 - **consistent**, because the same idea should be written the same way throughout Lily Studio
 
@@ -125,14 +128,14 @@ Do not silently change:
 - default values
 - timing behavior
 - state behavior
-- cleanup behavior
+- **cleanup** behavior
 - input behavior
 - networking behavior
 - module APIs
 - object ownership
 - initialization order
 
-##### Example
+##### **Example**
 
 If existing code sends:
 
@@ -143,7 +146,7 @@ remote:FireServer({
 })
 ```
 
-a style cleanup should not silently change it to:
+a style **cleanup** should not silently change it to:
 
 ```lua
 remote:FireServer({
@@ -158,19 +161,20 @@ The second version may look cleaner, but it changes the API and can break code t
 
 ---
 
-### 4. Controlled and Predictable Behavior
+### 4. **controlled and predictable behavior**
 
 Lily systems should behave in a controlled, predictable, and intentional way so that important behavior never depends on guesswork. A developer should be able to trace where a value originates, which owner is allowed to change it, what actions follow that change, and how the system eventually returns to a known clean state.
 
 The code should not depend on accidental timing, hidden state, unexplained fallbacks, or behavior that only works because several unrelated parts happen to run in a certain order.
 
-> **Main rule:** Lily should know what will happen, why it will happen, and which part of the code is responsible for making it happen.
+> [!IMPORTANT]
+> **Main rule:** **Lily should know what will happen, why it will happen, and which part of the code is responsible for making it happen.**
 
 #### Explicit state changes
 
 State should change through clear functions or owners instead of being modified from unrelated places.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local function setFooValue(fooContext: FooContext, value: number)
@@ -183,7 +187,7 @@ end
 
 The function shows exactly when the value changes and what happens afterward.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 fooContext.value = value
@@ -195,7 +199,7 @@ when many unrelated files can change the same value without going through a shar
 
 Defaults should be defined clearly instead of depending on missing data or accidental engine behavior.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local defaultFoo = 1
@@ -242,7 +246,7 @@ Do not use randomness as a replacement for missing logic or uncertain behavior.
 
 #### No unknown ownership
 
-Every important value should have a clearly identified owner.
+**Every important value should have a clearly identified owner.**
 
 A developer should be able to answer:
 
@@ -267,17 +271,18 @@ Failures should also be controlled. A function should clearly return, warn, or f
 
 Once the basic expectations are clear, the next concern is structure. Lily systems should be made from focused modules with clear dependencies, controlled ownership, and reusable code that remains inside the Lily ecosystem.
 
-### 5. ModuleScript-First Architecture
+### 5. **ModuleScript-first architecture**
 
 Lily Studio uses **ModuleScripts for the large majority of implementation code**, while normal `Script` and `LocalScript` files are kept small and limited to clear entry points. Feature logic belongs in modules because modules provide stronger boundaries, better reuse, easier testing, clearer typing, and a more controlled dependency structure.
 
-> **Main rule:** Lily systems live in modules. Scripts are small entry points.
+> [!IMPORTANT]
+> **Main rule:** **Lily systems live in modules. Scripts are small entry points.**
 
 ---
 
-#### 5.1 Most Logic Belongs in ModuleScripts
+#### 5.1 Most Logic Belongs in **ModuleScripts**
 
-Feature logic, controllers, state owners, utilities, runtime systems, UI builders, data handling, and reusable behavior should normally be placed in ModuleScripts.
+Feature logic, controllers, state owners, utilities, runtime systems, UI builders, data handling, and reusable behavior should normally be placed in **ModuleScripts**.
 
 ##### Preferred structure
 
@@ -298,7 +303,7 @@ The exact names will depend on the feature, but the important part is that the b
 
 A normal `Script` or `LocalScript` should usually perform a small amount of startup work and then hand control to modules.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local foo = require(source:WaitForChild("foo"))
@@ -312,7 +317,7 @@ The entry script should not contain hundreds of lines of business logic when tha
 
 #### 5.3 Use Few Entry Scripts
 
-Lily projects should avoid scattering many independent scripts throughout the hierarchy because each additional script creates another startup path, another lifecycle to understand, and another place where hidden behavior can begin.
+Lily projects should avoid scattering many independent scripts throughout the hierarchy because each additional script creates another startup path, another **lifecycle** to understand, and another place where hidden behavior can begin.
 
 A smaller number of intentional entry scripts makes execution order and ownership easier to understand.
 
@@ -323,7 +328,7 @@ Good uses for scripts include:
 - environment-specific startup
 - top-level initialization that cannot be represented as a reusable module
 
-Everything below that level should normally be delegated to ModuleScripts.
+Everything below that level should normally be delegated to **ModuleScripts**.
 
 ---
 
@@ -331,7 +336,7 @@ Everything below that level should normally be delegated to ModuleScripts.
 
 A module should expose only the functions or values that outside code actually needs.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local module = {}
@@ -377,11 +382,12 @@ A module-first architecture gives Lily Studio a clearer dependency graph and mak
 
 ---
 
-### 6. Lily Packages Only
+### 6. **Lily packages** Only
 
 Lily Studio code should depend on **Lily-owned packages and modules** rather than packages maintained by outside organizations. Shared behavior that becomes part of Lily's architecture should remain inside Lily's package structure so its API, update process, compatibility, review standards, and long-term maintenance stay under Lily Studio's control.
 
-> **Main rule:** Lily code uses Lily packages. Do not add outside organization packages as project dependencies.
+> [!IMPORTANT]
+> **Main rule:** **Lily code uses **Lily packages**. Do not add outside organization packages as project dependencies.**
 
 ---
 
@@ -389,7 +395,7 @@ Lily Studio code should depend on **Lily-owned packages and modules** rather tha
 
 When reusable functionality is needed, first use an existing Lily package or create a Lily-owned package for that responsibility.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local foo = require(lilyPackages:WaitForChild("foo"))
@@ -413,7 +419,7 @@ This rule does not apply to Roblox's built-in APIs, services, types, enums, or e
 
 ---
 
-#### 6.4 Build Shared Lily Packages When Reuse Is Real
+#### 6.4 Build Shared **Lily packages** When Reuse Is Real
 
 If the same behavior is needed across several Lily systems, move the behavior into a focused Lily package instead of copying it between projects or importing an outside package.
 
@@ -423,7 +429,7 @@ A Lily package should:
 - expose a small clear API
 - use `--!strict` when practical
 - follow Lily naming and formatting
-- have a clear lifecycle if it creates runtime state
+- have a clear **lifecycle** if it creates runtime state
 - avoid hidden global state
 - remain easy to replace or update
 
@@ -474,15 +480,15 @@ Do not force unrelated systems into one generic abstraction only because a few l
 
 ---
 
-## State, Change, and Lifecycle
+## State, Change, and **lifecycle**
 
-After the architecture is defined, state should have one owner, changes should happen through clear paths, and everything created by the system should have a matching cleanup path.
+After the architecture is defined, state should have one owner, changes should happen through clear paths, and everything created by the system should have a matching **cleanup path**.
 
-### 9. State Ownership
+### 9. **state ownership**
 
 Predictable behavior begins with clearly identified ownership. Important state should have one identifiable owner, and that owner should define the approved paths through which the state can be read, changed, synchronized, and eventually cleaned up.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local fooContexts = {}
@@ -525,7 +531,7 @@ Values that describe the same feature should normally be stored together instead
 
 Public state should be controlled whenever direct mutation could bypass validation, skip required side effects, break an invariant, or leave the owning system in a state it was not designed to handle.
 
-##### Example
+##### **Example**
 
 ```lua
 function controller:getValue(): number
@@ -541,11 +547,11 @@ Do not create getters and setters for every private field automatically. Use the
 
 ---
 
-### 11. Attributes Over ValueObjects
+### 11. **Attributes** Over **ValueObjects**
 
-Lily prefers **Instance Attributes** for simple metadata and state that naturally belongs to an Instance, because Attributes keep lightweight data attached to its owner without adding unnecessary child objects to the hierarchy.
+Lily prefers **Instance Attributes** for simple metadata and state that naturally belongs to an Instance, because **Attributes** keep lightweight data attached to its owner without adding unnecessary child objects to the hierarchy.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 object:SetAttribute("foo", true)
@@ -562,9 +568,9 @@ foo.Parent = object
 
 ---
 
-#### 11.1 Use Attributes for Simple Instance-Owned Data
+#### 11.1 Use **Attributes** for Simple Instance-Owned Data
 
-Attributes are the normal choice for simple values such as:
+**Attributes** are the normal choice for simple values such as:
 
 - booleans
 - numbers
@@ -575,7 +581,7 @@ Attributes are the normal choice for simple values such as:
 - lightweight metadata
 - simple state that belongs directly to an Instance
 
-##### Example
+##### **Example**
 
 ```lua
 object:SetAttribute("bar", 5)
@@ -597,7 +603,7 @@ end)
 
 ---
 
-#### 11.3 Do Not Use ValueObjects Only for Simple Metadata
+#### 11.3 Do Not Use **ValueObjects** Only for Simple Metadata
 
 Lily normally avoids creating:
 
@@ -611,21 +617,22 @@ when the object exists only to store a simple piece of metadata that can be repr
 
 Complex runtime state should still live in Luau when a table, object, module, or context is the better owner.
 
-> **Rule:** Use Attributes for simple Instance metadata and Luau state for complex runtime data.
+> **Rule:** Use **Attributes** for simple Instance metadata and Luau state for complex runtime data.
 
 ---
 
-### 12. Event-Driven Code
+### 12. **event-driven** Code
 
 Lily should react at the moment state changes instead of continuously checking whether a change has occurred. Roblox already exposes signals for many common state transitions, so Lily should connect to the correct change source and run only when there is actual work to perform.
 
-> **Main rule:** Lily reacts to changes. Lily does not repeatedly ask whether something changed.
+> [!IMPORTANT]
+> **Main rule:** **Lily reacts to changes. Lily does not repeatedly ask whether something changed.**
 
 ---
 
 #### 12.1 Do Not Poll for Normal State Changes
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 while true do
@@ -638,7 +645,7 @@ while true do
 end
 ```
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 object:GetPropertyChangedSignal("Enabled"):Connect(function()
@@ -695,7 +702,7 @@ userInputService.InputEnded:Connect(onInputEnded)
 
 `Heartbeat`, `RenderStepped`, and `Stepped` should not be used only to check whether ordinary data changed.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 runService.Heartbeat:Connect(function()
@@ -720,9 +727,9 @@ The important distinction is simple:
 
 ---
 
-### 13. Cleanup and Lifecycle
+### 13. **cleanup** and **lifecycle**
 
-Everything Lily creates must have a clearly defined lifecycle and cleanup path. If a system creates a connection, runtime object, interface object, task, cache entry, context, or other owned resource, that same ownership model must also define when and how the resource is released.
+Everything Lily creates must have a clearly defined **lifecycle** and **cleanup path**. If a system creates a connection, runtime object, interface object, task, cache entry, context, or other owned resource, that same ownership model must also define when and how the resource is released.
 
 This includes:
 
@@ -735,7 +742,7 @@ This includes:
 - scheduled tasks
 - references that could prevent garbage collection
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local function disconnectConnections(owner)
@@ -765,11 +772,12 @@ Setup should not continuously stack duplicate connections, duplicate UI, duplica
 
 With ownership established, the implementation should remain easy to follow at the function level. Lily favors descriptive names, one clearly defined responsibility, flat control flow, and direct iteration.
 
-#### 13.1 Table Cleanup Is Part of the Lifecycle
+#### 13.1 Table **cleanup** Is Part of the **lifecycle**
 
-Lily Studio uses tables extensively for runtime contexts, mappings, configuration, state, caches, collections, ownership records, and shared data structures, which makes table cleanup especially important. A table that is no longer needed should not continue holding references to objects, connections, callbacks, Instances, or other tables after its owner has been destroyed.
+Lily Studio uses tables extensively for runtime contexts, mappings, configuration, state, caches, collections, ownership records, and shared data structures, which makes table **cleanup** especially important. A table that is no longer needed should not continue holding references to objects, connections, callbacks, Instances, or other tables after its owner has been destroyed.
 
-> **Hard rule:** If a Lily-owned table is part of runtime state, its contents must be released when that runtime state is destroyed.
+> [!IMPORTANT]
+> **Hard rule:** **If a Lily-owned table is part of runtime state, its contents must be released when that runtime state is destroyed.**
 
 A table can keep other objects alive even after those objects are no longer visible or useful. For that reason, cleaning up a Lily system means more than destroying Instances or disconnecting events; the tables that owned those references must also stop retaining them.
 
@@ -777,9 +785,9 @@ A table can keep other objects alive even after those objects are no longer visi
 
 #### 13.2 Clear Owned Runtime Tables
 
-When a table is fully owned by one runtime context and is no longer needed, clear it during cleanup.
+When a table is fully owned by one runtime context and is no longer needed, clear it during **cleanup**.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local function destroyFoo(fooContext)
@@ -803,7 +811,7 @@ This allows Luau's garbage collector to reclaim the table and anything that is n
 
 Lily should not wait until a large shutdown operation to remove obviously stale entries from long-lived tables.
 
-### Preferred
+### **Preferred**
 
 ```lua
 fooContexts[fooKey] = nil
@@ -819,11 +827,11 @@ The same rule applies to caches, registries, mappings, lookup tables, and other 
 
 #### 13.4 Nested Tables Must Be Cleaned Intentionally
 
-Clearing only the outer table is not always enough when nested tables have their own lifecycle, active connections, tasks, or references.
+Clearing only the outer table is not always enough when nested tables have their own **lifecycle**, active connections, tasks, or references.
 
 For example, if each entry owns connections, those connections must be disconnected before the table is cleared.
 
-### Preferred
+### **Preferred**
 
 ```lua
 for _, bar in fooContext.bars do
@@ -837,7 +845,7 @@ end
 table.clear(fooContext.bars)
 ```
 
-The cleanup order should follow ownership: release the resources owned by each nested entry first, then remove the entries themselves.
+The **cleanup** order should follow ownership: release the resources owned by each nested entry first, then remove the entries themselves.
 
 ---
 
@@ -845,7 +853,7 @@ The cleanup order should follow ownership: release the resources owned by each n
 
 A connection table should never simply be cleared while the connections are still active.
 
-### Avoid
+### **Avoid**
 
 ```lua
 table.clear(fooContext.connections)
@@ -853,7 +861,7 @@ table.clear(fooContext.connections)
 
 when the stored `RBXScriptConnection` objects are still connected.
 
-### Preferred
+### **Preferred**
 
 ```lua
 for _, connection in fooContext.connections do
@@ -863,7 +871,7 @@ end
 table.clear(fooContext.connections)
 ```
 
-Removing the Lua reference does not disconnect the Roblox connection, so both parts of the lifecycle must be handled.
+Removing the Lua reference does not disconnect the Roblox connection, so both parts of the **lifecycle** must be handled.
 
 ---
 
@@ -871,7 +879,7 @@ Removing the Lua reference does not disconnect the Roblox connection, so both pa
 
 If a table owns Instances that should no longer exist, destroy the Instances before clearing the table that references them.
 
-### Preferred
+### **Preferred**
 
 ```lua
 for _, object in fooContext.objects do
@@ -883,7 +891,7 @@ table.clear(fooContext.objects)
 
 If another system owns the Instance, Lily should only remove its own reference and must not destroy an object it does not own.
 
-> **Rule:** Cleanup follows ownership. Destroy what the table owns, release what it only references.
+> **Rule:** **cleanup** follows ownership. Destroy what the table owns, release what it only references.
 
 ---
 
@@ -891,7 +899,7 @@ If another system owns the Instance, Lily should only remove its own reference a
 
 A table should not be cleared while a background task, callback, or recurring runtime path can still access it.
 
-The normal cleanup order should be controlled:
+The normal **cleanup** order should be controlled:
 
 ```text
 stop recurring work
@@ -907,7 +915,7 @@ remove owner from registries
 release final references
 ```
 
-This prevents callbacks from reading partially destroyed state or recreating references during cleanup.
+This prevents callbacks from reading partially destroyed state or recreating references during **cleanup**.
 
 ---
 
@@ -915,7 +923,7 @@ This prevents callbacks from reading partially destroyed state or recreating ref
 
 Long-lived registries are especially important because one stale entry can keep an entire runtime tree alive.
 
-### Avoid
+### **Avoid**
 
 ```lua
 fooContexts[fooKey] = fooContext
@@ -923,7 +931,7 @@ fooContexts[fooKey] = fooContext
 
 remaining after `fooContext` has already been destroyed.
 
-### Preferred
+### **Preferred**
 
 ```lua
 fooContexts[fooKey] = nil
@@ -935,7 +943,7 @@ A Lily registry should contain only currently valid owners.
 
 ---
 
-#### 13.9 Caches Need an Invalidation and Cleanup Rule
+#### 13.9 Caches Need an Invalidation and **cleanup** Rule
 
 A cache should never grow indefinitely simply because values were useful once.
 
@@ -948,7 +956,7 @@ Every Lily cache should have a clear answer for:
 - whether the cache has a maximum lifetime
 - whether the cache is cleared when its owner is destroyed
 
-If a cache has no invalidation or cleanup rule, it is not fully controlled.
+If a cache has no invalidation or **cleanup** rule, it is not fully controlled.
 
 ---
 
@@ -958,7 +966,7 @@ Callbacks and closures can keep tables alive when they capture a large owner or 
 
 When a connection or task is destroyed, the callback that captured the state should no longer have a path that keeps the owner alive.
 
-This is another reason Lily requires controlled connection cleanup and controlled background-task cleanup.
+This is another reason Lily requires controlled connection **cleanup** and controlled background-task **cleanup**.
 
 > **Rule:** A destroyed owner should not remain reachable only because an old callback still references it.
 
@@ -968,7 +976,7 @@ This is another reason Lily requires controlled connection cleanup and controlle
 
 Reusing a table can reduce allocation in hot paths, but reuse is only safe when the table has one clear owner and its previous contents are completely reset before reuse.
 
-### Preferred
+### **Preferred**
 
 ```lua
 table.clear(fooData)
@@ -982,7 +990,7 @@ Optimization never overrides ownership.
 
 ---
 
-#### 13.12 Do Not Replace Cleanup With Garbage Collection Assumptions
+#### 13.12 Do Not Replace **cleanup** With Garbage Collection Assumptions
 
 Luau's garbage collector can reclaim unreachable tables, but Lily should not depend on garbage collection to solve ownership mistakes.
 
@@ -997,27 +1005,28 @@ The code must first make unused state unreachable by:
 
 The garbage collector can only reclaim data after Lily has correctly released its references.
 
-> **Hard rule:** Garbage collection is the final memory-recovery mechanism, not a substitute for cleanup.
+> [!IMPORTANT]
+> **Hard rule:** **Garbage collection is the final memory-recovery mechanism, not a substitute for **cleanup**.**
 
 ---
 
-#### 13.13 Table Cleanup Should Be Easy to Explain
+#### 13.13 Table **cleanup** Should Be Easy to Explain
 
-Because Lily uses many tables, the cleanup path should be just as understandable as the setup path.
+Because Lily uses many tables, the **cleanup path** should be just as understandable as the setup path.
 
 A developer should be able to explain:
 
 > "This owner stops its recurring work, disconnects its connections, destroys its owned objects, clears its tables, removes itself from the registry, and then releases the final reference."
 
-If cleanup cannot be explained clearly, the ownership model is probably too complicated and should be simplified.
+If **cleanup** cannot be explained clearly, the ownership model is probably too complicated and should be simplified.
 
 ---
 
-#### 13.14 Cleanup Should Be Symmetrical With Setup
+#### 13.14 **cleanup** Should Be Symmetrical With Setup
 
-Every major setup action should have a corresponding cleanup action.
+Every major setup action should have a corresponding **cleanup** action.
 
-| Setup | Cleanup |
+| Setup | **cleanup** |
 | --- | --- |
 | create connection | disconnect connection |
 | create Instance | destroy owned Instance |
@@ -1029,7 +1038,7 @@ Every major setup action should have a corresponding cleanup action.
 
 This symmetry makes memory behavior easier to reason about and reduces the chance that a resource is forgotten.
 
-> **Final cleanup rule:** Lily cleanup is not optional housekeeping. It is part of the runtime design, especially because Lily relies heavily on tables to own and connect system state.
+> **Final **cleanup** rule:** Lily **cleanup** is not optional housekeeping. It is part of the runtime design, especially because Lily relies heavily on tables to own and connect system state.
 
 
 ### 14. Naming
@@ -1042,7 +1051,7 @@ Strong naming allows Lily code to explain much of itself before comments are nee
 
 Normal Lily variables, functions, fields, and module methods use `camelCase`.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local fooValue
@@ -1057,7 +1066,7 @@ function module.setFooValue()
 end
 ```
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local FooValue
@@ -1071,7 +1080,7 @@ local FOO_VALUE
 
 Names should be long enough to clearly explain their meaning, and unnecessary abbreviations should be avoided because they make larger files slower to scan and reason about.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local connection
@@ -1080,7 +1089,7 @@ local selectedBars
 local currentValue
 ```
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local conn
@@ -1089,9 +1098,10 @@ local sel
 local val
 ```
 
-> **Hard rule:** Lily Studio does not abbreviate identifiers. Use the complete descriptive name every time.
+> [!IMPORTANT]
+> **Hard rule:** **Lily Studio does not abbreviate identifiers. Use the complete descriptive name every time.**
 
-Lily Studio does not abbreviate names. Variables, functions, fields, modules, types, callbacks, configuration values, and other identifiers should use the full descriptive word instead of shortened forms, even when an abbreviation may be commonly understood.
+**Lily Studio does not abbreviate names.** Variables, functions, fields, modules, types, callbacks, configuration values, and other identifiers should use the full descriptive word instead of shortened forms, even when an abbreviation may be commonly understood.
 
 ---
 
@@ -1099,7 +1109,7 @@ Lily Studio does not abbreviate names. Variables, functions, fields, modules, ty
 
 Boolean values should sound like something that can naturally be answered with yes or no.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local isRunning
@@ -1121,7 +1131,7 @@ if hasAccess then
 
 Functions should normally begin with a verb so the call site clearly describes what is happening.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 updateFoo()
@@ -1132,7 +1142,7 @@ resolveValue()
 releaseFoo()
 ```
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 foo()
@@ -1146,7 +1156,7 @@ valueData()
 
 Event callbacks should use names that explain what event causes them to execute.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 onInputBegan()
@@ -1177,7 +1187,7 @@ local function destroyFoo()
 end
 ```
 
-A single function should not simultaneously handle validation, UI creation, networking, state mutation, cleanup, and unrelated runtime behavior unless those actions genuinely form one small operation.
+A single function should not simultaneously handle validation, UI creation, networking, state mutation, **cleanup**, and unrelated runtime behavior unless those actions genuinely form one small operation.
 
 ---
 
@@ -1207,7 +1217,7 @@ local function disconnectConnections(owner)
 end
 ```
 
-This helper represents a real lifecycle operation and can be reused safely.
+This helper represents a real **lifecycle** operation and can be reused safely.
 
 ---
 
@@ -1219,7 +1229,7 @@ A function call should communicate enough intent that the reader can understand 
 
 #### 16.1 Avoid Hidden Boolean Arguments
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 updateFoo(foo, true, false)
@@ -1227,7 +1237,7 @@ updateFoo(foo, true, false)
 
 The reader cannot easily tell what each boolean means.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 updateFoo(foo, {
@@ -1242,13 +1252,13 @@ Use an options table when several optional behaviors need names.
 
 #### 16.2 Avoid Positional `nil`
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 createFoo(name, nil, true)
 ```
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 createFoo(name, {
@@ -1260,19 +1270,20 @@ Options tables should still be used only when they make the call clearer. Simple
 
 ---
 
-### 17. Prefer Table-Driven Design
+### 17. Prefer **table-driven design**
 
 Lily Studio favors **tables for related data, configuration, mappings, handlers, and grouped runtime state** because tables keep connected information together and make systems easier to extend without adding scattered variables or repeated branching logic.
 
 A table should be used when several values belong to the same concept, when several names map to related behavior, or when a system needs one clear structure that another function can read and process.
 
-> **Main rule:** When several related values or behaviors clearly benefit from being grouped, Lily should usually represent them with a table. Simple standalone values may remain separate when that is clearer.
+> [!IMPORTANT]
+> **Main rule:** **When several related values or behaviors clearly benefit from being grouped, Lily should usually represent them with a table. Simple standalone values may remain separate when that is clearer.**
 
 #### 17.1 Group Related Data Together
 
 When several values describe the same object or concept, keep them together in one table instead of creating many separate variables that must remain synchronized manually.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooData = {
@@ -1282,7 +1293,7 @@ local fooData = {
 }
 ```
 
-### Also Allowed
+### **Also Allowed**
 
 ```lua
 local fooName = "Foo"
@@ -1292,7 +1303,7 @@ local fooValue = 1
 
 Separate variables are completely valid Lily code when each value is simple, local to the current scope, and does not need to travel through the system as one grouped object. A table should be introduced only when grouping the values gives the code clearer ownership, a reusable structure, a shared type, or a cleaner API.
 
-> **Rule:** Lily likes table-driven design, but Lily does not force unrelated or simple local values into tables.
+> **Rule:** Lily likes **table-driven design**, but Lily does not force unrelated or simple local values into tables.
 
 ---
 
@@ -1300,7 +1311,7 @@ Separate variables are completely valid Lily code when each value is simple, loc
 
 Tables are preferred when one known value maps directly to another value or function.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local handlers = {
@@ -1323,7 +1334,7 @@ This is usually clearer and easier to extend than a long `if` or `elseif` chain.
 
 Related configuration should normally live in a structured table when the values describe one system or one operation.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooConfig = {
@@ -1341,7 +1352,7 @@ This keeps the configuration grouped under one clear owner instead of spreading 
 
 When a runtime system owns several related values, those values should usually be grouped under one context table.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooContext = {
@@ -1351,15 +1362,15 @@ local fooContext = {
 }
 ```
 
-The context becomes the owner of the state and makes the lifecycle easier to understand.
+The context becomes the owner of the state and makes the **lifecycle** easier to understand.
 
 ---
 
 #### 17.5 Prefer Data-Driven Behavior Over Repeated Branches
 
-If behavior can be described as data, Lily should normally prefer a table-driven design instead of repeating nearly identical code.
+If behavior can be described as data, Lily should normally prefer a **table-driven design** instead of repeating nearly identical code.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local actions = {
@@ -1369,7 +1380,7 @@ local actions = {
 }
 ```
 
-A table-driven design is especially useful when new entries may be added later because the system can often be extended by adding data instead of rewriting control flow.
+A **table-driven design** is especially useful when new entries may be added later because the system can often be extended by adding data instead of rewriting control flow.
 
 ---
 
@@ -1377,7 +1388,7 @@ A table-driven design is especially useful when new entries may be added later b
 
 Lily prefers tables when they improve ownership, organization, extensibility, or readability, but a table should not be introduced only because tables are common.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local value = 1
@@ -1395,7 +1406,7 @@ Do not wrap every single value inside a table when the table adds no structure o
 
 Tables that represent the same concept should use the same field names and structure throughout the codebase.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local foo = {
@@ -1419,7 +1430,7 @@ Consistent table shapes make autocomplete stronger, types easier to define, and 
 
 Important or reusable tables should use named Luau types so their expected structure is explicit.
 
-### Preferred
+### **Preferred**
 
 ```lua
 type FooData = {
@@ -1449,11 +1460,11 @@ If the table cannot be described clearly in a short sentence, its responsibiliti
 
 ---
 
-### 18. Guard Clauses
+### 18. **guard clauses**
 
-Guard clauses are a standard Lily control-flow pattern because they keep the main execution path flat and make invalid or unsupported states visible near the top of the function. A guard should return early when continuing would be incorrect, unsafe, or unnecessary.
+**guard clauses** are a standard Lily control-flow pattern because they keep the main execution path flat and make invalid or unsupported states visible near the top of the function. A guard should return early when continuing would be incorrect, unsafe, or unnecessary.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local function updateFoo(fooContext)
@@ -1465,7 +1476,7 @@ local function updateFoo(fooContext)
 end
 ```
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local function updateFoo(fooContext)
@@ -1485,9 +1496,9 @@ The preferred version makes every invalid condition visible at the beginning of 
 
 #### 18.1 Do Not Add Redundant Guards
 
-Guard clauses should protect real conditions, not repeat guarantees that were already established by the surrounding architecture.
+**guard clauses** should protect real conditions, not repeat guarantees that were already established by the surrounding architecture.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local function sendFoo(fooContext, value)
@@ -1507,15 +1518,15 @@ local function sendFoo(fooContext, value)
 end
 ```
 
-> **Rule:** Lily uses necessary guard clauses, but removes checks that are already guaranteed elsewhere.
+> **Rule:** Lily uses necessary **guard clauses**, but removes checks that are already guaranteed elsewhere.
 
 ---
 
-### 19. No Conditional Nesting
+### 19. No **conditional nesting**
 
-Lily avoids conditional nesting because each additional level forces the reader to carry more conditions mentally while following the main path. Flat control flow keeps decisions visible, reduces indentation, and makes later changes less likely to introduce hidden branches.
+Lily avoids **conditional nesting** because each additional level forces the reader to carry more conditions mentally while following the main path. Flat control flow keeps decisions visible, reduces indentation, and makes later changes less likely to introduce hidden branches.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 if fooContext then
@@ -1525,7 +1536,7 @@ if fooContext then
 end
 ```
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 if not fooContext then return end
@@ -1542,7 +1553,7 @@ The same rule applies inside loops, callbacks, event handlers, and public module
 
 If a function cannot stay flat without becoming difficult to read, move a meaningful decision into a small helper rather than adding nested branches.
 
-##### Example
+##### **Example**
 
 ```lua
 local function canUpdateFoo(fooContext)
@@ -1561,7 +1572,7 @@ updateFoo(fooContext.foo)
 
 The helper should still have one clearly defined responsibility and should not exist only to hide complexity.
 
-> **Rule:** Lily uses guard clauses, `continue`, `break`, lookup tables, and small helpers instead of nested conditionals.
+> **Rule:** Lily uses **guard clauses**, `continue`, `break`, lookup tables, and small helpers instead of nested conditionals.
 
 ---
 
@@ -1573,7 +1584,7 @@ Lily prefers control flow that progresses downward in a direct and predictable p
 
 #### 20.1 Avoid `else`
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 if enabled then
@@ -1583,7 +1594,7 @@ else
 end
 ```
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 if enabled then
@@ -1598,7 +1609,7 @@ stopFoo()
 
 #### 20.2 Avoid `elseif`
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 if mode == "Foo" then
@@ -1610,7 +1621,7 @@ elseif mode == "Baz" then
 end
 ```
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local handlers = {
@@ -1633,7 +1644,7 @@ A lookup table is not always required, but Lily should still avoid long conditio
 
 Conditions and boolean names should normally be written in positive form because positive logic is easier to interpret at a glance and reduces the mental effort required to reason about inverted or double-negative conditions.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 if isRunning then
@@ -1641,7 +1652,7 @@ if isRunning then
 end
 ```
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 if not isNotRunning then
@@ -1669,7 +1680,7 @@ Negative names should only be used when the negative state is the actual concept
 
 Lily does not use chained `and/or` expressions as a substitute for explicit control flow, because the shorter expression often hides decision-making and becomes difficult to reason about when `false` or `nil` are valid values.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local value = condition and foo or bar
@@ -1683,7 +1694,7 @@ local result = firstCondition and foo
 	or baz
 ```
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 if firstCondition then return foo end
@@ -1704,9 +1715,9 @@ Lily uses finite collection iteration when a collection genuinely needs to be pr
 
 #### 23.1 Use Generalized Luau Iteration
 
-Lily does not use `pairs()` or `ipairs()`.
+Lily does not use `pairs()` or `i`pairs()``.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 for key, value in data do
@@ -1718,7 +1729,7 @@ for index, bar in bars do
 end
 ```
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 for key, value in pairs(data) do
@@ -1736,7 +1747,7 @@ end
 
 #### 23.2 Use `continue` to Keep Loop Bodies Flat
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 for _, bar in bars do
@@ -1751,7 +1762,7 @@ end
 
 #### 23.3 Use `break` When the Work Is Complete
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 for _, bar in bars do
@@ -1792,7 +1803,7 @@ Strict mode helps catch invalid property access, incorrect arguments, missing fi
 
 #### 24.2 Type Function Parameters and Returns
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local function getFoo(fooKey: string): FooContext?
@@ -1812,7 +1823,7 @@ Important public APIs should not rely on the reader guessing what type is expect
 
 #### 24.3 Use Named Types for Repeated Structures
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 export type FooData = {
@@ -1842,7 +1853,7 @@ Use `export type` for types that are part of a module's public API. Internal imp
 
 #### 24.5 Type Collections
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local bars: { string } = {}
@@ -1869,9 +1880,9 @@ Do not make every value optional only to make the type checker stop reporting er
 
 ---
 
-#### 24.7 Narrow Types With Guard Clauses
+#### 24.7 Narrow Types With **guard clauses**
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local function useFoo(object: Instance?)
@@ -1882,7 +1893,7 @@ local function useFoo(object: Instance?)
 end
 ```
 
-Guard clauses work naturally with Luau type narrowing and also match Lily's flat control-flow style.
+**guard clauses** work naturally with Luau type narrowing and also match Lily's flat control-flow style.
 
 ---
 
@@ -1890,7 +1901,7 @@ Guard clauses work naturally with Luau type narrowing and also match Lily's flat
 
 Do not use `any` only to hide a type error.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local value: any = data.value
@@ -1902,7 +1913,7 @@ Prefer a known type, or validate an unknown value before use.
 
 #### 24.9 Avoid Unsafe Casts
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local foo = object :: RemoteEvent
@@ -1910,7 +1921,7 @@ local foo = object :: RemoteEvent
 
 when the type has not been established.
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 if not object:IsA("RemoteEvent") then return end
@@ -1924,7 +1935,7 @@ Casts should be used only when the architecture genuinely guarantees the type an
 
 #### 24.10 Runtime Validation Still Matters
 
-Static typing cannot guarantee the shape of data that arrives from runtime boundaries such as RemoteEvents, attributes, user input, JSON, or dynamically discovered Instances.
+Static typing cannot guarantee the shape of data that arrives from runtime boundaries such as RemoteEvents, **Attributes**, user input, JSON, or dynamically discovered Instances.
 
 Lily should still validate external data before trusting it.
 
@@ -1938,7 +1949,8 @@ Types describe the shape of an API, while comments should document the informati
 
 Comments should explain **why**, important behavior, unusual decisions, expectations, side effects, or API usage. They should not repeat simple code in plain English.
 
-> **Main rule:** A Lily comment should make the code clearer to understand and maintain, not add noise around code that was already clear.
+> [!IMPORTANT]
+> **Main rule:** **A Lily comment should make the code clearer to understand and maintain, not add noise around code that was already clear.**
 
 ---
 
@@ -1946,7 +1958,7 @@ Comments should explain **why**, important behavior, unusual decisions, expectat
 
 A comment should be complete enough to be understood by another developer who did not write the original code.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 -- update foo
@@ -1955,7 +1967,7 @@ updateFoo()
 
 The function name already explains that the function updates `foo`, so the comment adds no useful information.
 
-##### Better
+##### **Better**
 
 ```lua
 -- Update the cached value before notifying listeners so every listener reads the new state.
@@ -1970,14 +1982,14 @@ The second comment explains an important reason for the order of operations.
 
 Comments should usually explain why the code is written a certain way.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 -- Set foo to true.
 foo = true
 ```
 
-##### Better
+##### **Better**
 
 ```lua
 -- Keep this enabled until cleanup so callbacks cannot recreate the object during destruction.
@@ -1997,14 +2009,14 @@ Good reasons for a comment include:
 - a specific execution order is required
 - a workaround exists because of a Roblox limitation
 - a performance decision is not obvious
-- cleanup must happen before another operation
+- **cleanup** must happen before another operation
 - a value intentionally does not update immediately
 - an API has an unusual requirement
 - a function has an important side effect
 - a temporary compatibility rule exists
 - a section depends on behavior outside the current file
 
-##### Example
+##### **Example**
 
 ```lua
 -- Disconnect first so the callback cannot run again while the owner is being destroyed.
@@ -2023,7 +2035,7 @@ Do not leave comments that describe:
 
 - old parameter names
 - removed behavior
-- old state ownership
+- old **state ownership**
 - outdated workarounds
 - old APIs
 - behavior that no longer exists
@@ -2038,7 +2050,7 @@ Important public functions, reusable helpers, shared package APIs, and functions
 
 Luau documentation comments can use `---` and tags such as `@param`, `@return`, and `@error` when those tags make the function easier to understand.
 
-##### Example
+##### **Example**
 
 ```lua
 --- Updates the stored value and notifies every registered listener.
@@ -2108,7 +2120,7 @@ Do not add tags only to make the comment block look larger or more formal.
 
 #### 25.8 Public APIs Need Better Documentation Than Private Details
 
-Shared Lily modules and Lily packages are used by other developers, so their public APIs should be especially clear.
+Shared Lily modules and **Lily packages** are used by other developers, so their public APIs should be especially clear.
 
 A public function should make it straightforward to understand:
 
@@ -2117,7 +2129,7 @@ A public function should make it straightforward to understand:
 - what it returns
 - what state it changes
 - whether it creates anything
-- whether cleanup is required
+- whether **cleanup** is required
 - whether it can fail
 - whether it has important side effects
 
@@ -2129,7 +2141,7 @@ Private helpers usually need less documentation when their name, types, and impl
 
 Do not keep confusing code and then try to explain the confusion with a large comment.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 -- This does several steps in a specific order because the data gets changed in multiple places
@@ -2145,9 +2157,9 @@ Prefer:
 
 - clearer names
 - smaller functions
-- simpler state ownership
+- simpler **state ownership**
 - fewer responsibilities
-- table-driven organization for related data, mappings, handlers, configuration, and runtime state
+- **table-driven** organization for related data, mappings, handlers, configuration, and runtime state
 - flat control flow
 - focused helpers
 
@@ -2169,13 +2181,13 @@ Avoid:
 - comments written only for the original author
 - comments that do not use normal grammar when a full explanation is needed
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 -- idk why this breaks lol
 ```
 
-##### Better
+##### **Better**
 
 ```lua
 -- Roblox may return nil while the object is being reparented, so defer the lookup until the next task cycle.
@@ -2187,13 +2199,13 @@ Avoid:
 
 A `TODO` should explain exactly what remains to be done and why it is not being completed in the current change.
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 -- TODO fix this
 ```
 
-##### Better
+##### **Better**
 
 ```lua
 -- TODO: Replace this compatibility path after the old data format is no longer supported.
@@ -2209,7 +2221,8 @@ A Lily developer should be able to explain a function in simple words without ne
 
 If a function cannot be explained clearly, the function is probably doing too much, hiding too much state, or using control flow that is too complicated.
 
-> **Main rule:** If you cannot easily explain what a function does and how it works, the function should be improved.
+> [!IMPORTANT]
+> **Main rule:** **If you cannot easily explain what a function does and how it works, the function should be improved.**
 
 A good explanation should normally sound simple:
 
@@ -2219,7 +2232,7 @@ That explanation is short because the function has a clear responsibility.
 
 A warning sign sounds more like:
 
-> "This function sometimes changes the value, but it also creates objects, checks another system, sends data, updates several tables, and then does different cleanup depending on how it was called."
+> "This function sometimes changes the value, but it also creates objects, checks another system, sends data, updates several tables, and then does different **cleanup** depending on how it was called."
 
 That function should probably be split into smaller operations.
 
@@ -2232,14 +2245,14 @@ A clear function should make its behavior visible through:
 - a descriptive name
 - clear parameter names
 - strong types
-- necessary guard clauses
-- no conditional nesting
+- necessary **guard clauses**
+- no **conditional nesting**
 - one main responsibility
 - obvious state changes
 - clear return behavior
 - small focused helpers when needed
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local function setFooValue(fooContext: FooContext, value: number)
@@ -2330,7 +2343,7 @@ The source file itself should also be predictable. Related declarations should s
 
 ### 27. File Organization
 
-Lily files should follow a consistent top-level structure so developers can quickly locate services, dependencies, state, types, private helpers, public APIs, and cleanup logic without learning a different layout for every file.
+Lily files should follow a consistent top-level structure so developers can quickly locate services, dependencies, state, types, private helpers, public APIs, and **cleanup** logic without learning a different layout for every file.
 
 #### Recommended order
 
@@ -2349,7 +2362,7 @@ Lily files should follow a consistent top-level structure so developers can quic
 | 11 | Public module methods |
 | 12 | `return module` |
 
-##### Example
+##### **Example**
 
 ```lua
 --!strict
@@ -2419,7 +2432,7 @@ Dependency order still takes priority when one declaration must exist before ano
 
 #### 28.1 Services
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local collectionService = game:GetService("CollectionService")
@@ -2434,7 +2447,7 @@ local userInputService = game:GetService("UserInputService")
 
 #### 28.2 Required Modules
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local bar = require(source:WaitForChild("bar"))
@@ -2446,7 +2459,7 @@ local foo = require(source:WaitForChild("foo"))
 
 #### 28.3 References
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local barFolder = source:WaitForChild("bar")
@@ -2478,7 +2491,7 @@ Use the standard Lily separator between major file sections and top-level functi
 --————————————————————————————————————————————————————————————————————--
 ```
 
-##### Example
+##### **Example**
 
 ```lua
 local function foo()
@@ -2504,7 +2517,7 @@ Lily formatting should remain compact enough to avoid unnecessary vertical space
 
 #### 30.1 Keep Related Lines Together
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local function setFoo(fooContext, value)
@@ -2513,7 +2526,7 @@ local function setFoo(fooContext, value)
 end
 ```
 
-##### Avoid
+##### **Avoid**
 
 ```lua
 local function setFoo(fooContext, value)
@@ -2530,7 +2543,7 @@ end
 
 #### 30.2 Keep Simple Expressions on One Line
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local x = math.clamp((foo - bar) / baz, 0, 1)
@@ -2542,7 +2555,7 @@ Avoid breaking a simple expression across several lines when the one-line versio
 
 #### 30.3 Keep Large Tables Easy to Scan
 
-##### Preferred
+##### **Preferred**
 
 ```lua
 local data = {
@@ -2558,17 +2571,18 @@ Lily code should be compact, but not compressed to the point where the structure
 
 ---
 
-## User Interface
+## **runtime infrastructure** and User Interface
 
-Lily interfaces follow the same ownership rules as the rest of the codebase: they are created by code, configured in source, updated from runtime state, and removed by the system that owns them.
+Lily **runtime infrastructure** follows the same ownership rules as the rest of the codebase: required runtime objects are created through code, configured in source, owned by a clear system, and cleaned up through the same controlled **lifecycle**. User interfaces follow this rule as part of the broader **runtime infrastructure** standard.
 
-### 31. Script-Created Runtime Infrastructure
+### 31. **Script-created runtime infrastructure**
 
-Lily Studio runtime infrastructure should be created, configured, connected, and cleaned up through code so the complete structure of a system remains visible in source control and does not depend on hidden Studio setup. A developer should be able to recreate the runtime behavior of a Lily system from the codebase without manually rebuilding required networking objects, interface objects, folders, or other supporting Instances in Roblox Studio.
+Lily Studio **runtime infrastructure** should be created, configured, connected, and cleaned up through code so the complete structure of a system remains visible in **source control** and does not depend on hidden Studio setup. A developer should be able to recreate the runtime behavior of a Lily system from the codebase without manually rebuilding required networking objects, interface objects, folders, or other supporting Instances in Roblox Studio.
 
-> **Main rule:** If an Instance exists because a Lily system needs it to function at runtime, Lily should normally create and own that Instance through code.
+> [!IMPORTANT]
+> **Main rule:** **If an Instance exists because a Lily system needs it to function at runtime, Lily should normally create and own that Instance through code.**
 
-This rule applies to runtime infrastructure such as:
+This rule applies to **runtime infrastructure** such as:
 
 - `RemoteEvent`
 - `RemoteFunction`
@@ -2591,7 +2605,7 @@ The purpose of this rule is to keep system behavior reproducible, controlled, an
 
 Lily should create its own networking objects instead of requiring developers to manually place `RemoteEvent` or `RemoteFunction` Instances in Studio.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local remote = Instance.new("RemoteEvent")
@@ -2599,9 +2613,9 @@ remote.Name = "Foo"
 remote.Parent = parent
 ```
 
-When several networking objects are required, the system that owns them should create them during initialization and keep their names, parents, permissions, and cleanup behavior explicit.
+When several networking objects are required, the system that owns them should create them during initialization and keep their names, parents, permissions, and **cleanup** behavior explicit.
 
-### Avoid
+### **Avoid**
 
 ```text
 ReplicatedStorage
@@ -2620,7 +2634,7 @@ A manually created runtime remote introduces hidden setup that is not represente
 
 Folders that exist only to organize or support Lily runtime systems should also be created by the owning code.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooFolder = Instance.new("Folder")
@@ -2638,7 +2652,7 @@ If a folder is part of the runtime architecture, its creation belongs to the run
 
 Internal communication objects such as `BindableEvent` and `BindableFunction` should be created by the system that owns them rather than manually placed in Studio.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooEvent = Instance.new("BindableEvent")
@@ -2646,15 +2660,15 @@ fooEvent.Name = "Foo"
 fooEvent.Parent = parent
 ```
 
-This keeps ownership and cleanup obvious and prevents hidden dependencies between unrelated Studio objects.
+This keeps ownership and **cleanup** obvious and prevents hidden dependencies between unrelated Studio objects.
 
 ---
 
 #### 31.4 Lily UI Is Created Through Code
 
-Lily Studio interfaces are created through code so their structure, properties, behavior, and lifecycle remain visible in source control. Lily should not depend on manually assembled Studio UI hierarchies for interfaces owned by Lily systems.
+Lily Studio interfaces are created through code so their structure, properties, behavior, and **lifecycle** remain visible in **source control**. Lily should not depend on manually assembled Studio UI hierarchies for interfaces owned by Lily systems.
 
-### Avoid
+### **Avoid**
 
 ```text
 StarterGui
@@ -2666,7 +2680,7 @@ StarterGui
 
 when the Lily runtime expects those objects to already exist.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooFrame = interface.Frame(parent, {
@@ -2676,7 +2690,7 @@ local fooFrame = interface.Frame(parent, {
 })
 ```
 
-The code that creates the interface should also own its important configuration, event connections, updates, and cleanup.
+The code that creates the interface should also own its important configuration, event connections, updates, and **cleanup**.
 
 ---
 
@@ -2688,7 +2702,7 @@ Important configuration may include:
 
 - names
 - parent relationships
-- attributes
+- **Attributes**
 - sizes
 - positions
 - visibility
@@ -2698,7 +2712,7 @@ Important configuration may include:
 - ownership-related metadata
 - other properties required by the system
 
-### Preferred
+### **Preferred**
 
 ```lua
 local foo = Instance.new("Folder")
@@ -2731,11 +2745,11 @@ If ownership is unclear, the runtime architecture should be simplified before mo
 
 #### 31.7 Setup Must Not Create Duplicate Infrastructure
 
-Initialization should be deterministic and safe to run according to the lifecycle defined by the owning system. Lily should not create duplicate remotes, duplicate folders, duplicate UI, duplicate bindables, or duplicate runtime containers because setup was called more than once.
+Initialization should be deterministic and safe to run according to the **lifecycle** defined by the owning system. Lily should not create duplicate remotes, duplicate folders, duplicate UI, duplicate bindables, or duplicate runtime containers because setup was called more than once.
 
-The system should either reuse the valid object it already owns or cleanly replace the old object according to the intended lifecycle.
+The system should either reuse the valid object it already owns or cleanly replace the old object according to the intended **lifecycle**.
 
-### Preferred pattern
+### **Preferred pattern**
 
 ```lua
 local foo = parent:FindFirstChild("Foo")
@@ -2752,11 +2766,11 @@ This pattern is appropriate only when reuse is part of the intended ownership mo
 
 ---
 
-#### 31.8 Runtime Infrastructure Must Be Reproducible
+#### 31.8 **runtime infrastructure** Must Be Reproducible
 
 A Lily project should not depend on a developer remembering a list of manual Studio steps before the code can function.
 
-For runtime infrastructure, cloning the project and running the intended bootstrap path should be enough for Lily to create the objects it owns.
+For **runtime infrastructure**, cloning the project and running the intended bootstrap path should be enough for Lily to create the objects it owns.
 
 The codebase should define:
 
@@ -2771,11 +2785,11 @@ This makes setup easier to review, easier to reproduce, and less likely to behav
 
 ---
 
-#### 31.9 Authored Content Is Different From Runtime Infrastructure
+#### 31.9 Authored Content Is Different From **runtime infrastructure**
 
 This rule does not mean every object in a Roblox experience must be generated through Luau.
 
-Manually authored content may still exist when the object is genuinely part of the designed world or asset content rather than Lily runtime infrastructure. Examples may include a map, a model created by an artist, a physical environment object, or another asset whose purpose is visual or authored content.
+Manually authored content may still exist when the object is genuinely part of the designed world or asset content rather than Lily **runtime infrastructure**. Examples may include a map, a model created by an artist, a physical environment object, or another asset whose purpose is visual or authored content.
 
 The distinction is ownership:
 
@@ -2791,15 +2805,15 @@ This keeps Lily systems fully controlled without forcing artistic or world-build
 
 A Lily module should not silently assume that a required runtime object has already been created by hand.
 
-### Avoid
+### **Avoid**
 
 ```lua
 local fooRemote = replicatedStorage:WaitForChild("FooRemote")
 ```
 
-when `FooRemote` is Lily-owned runtime infrastructure and no Lily code creates it.
+when `FooRemote` is Lily-owned **runtime infrastructure** and no Lily code creates it.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooRemote = Instance.new("RemoteEvent")
@@ -2813,7 +2827,7 @@ The important requirement is that the creation path remains inside Lily code.
 
 ---
 
-#### 31.11 Use Lily Packages for Shared Creation Patterns
+#### 31.11 Use **Lily packages** for Shared Creation Patterns
 
 If several Lily systems need the same creation behavior, that behavior should be placed in a Lily-owned module or package instead of copied between systems or delegated to an outside dependency.
 
@@ -2823,17 +2837,17 @@ For example, Lily may use shared internal helpers for:
 - creating remotes
 - building interfaces
 - creating runtime containers
-- registering cleanup
-- applying standard attributes
+- registering **cleanup**
+- applying standard **Attributes**
 - establishing common ownership patterns
 
-The helper should still keep the final ownership and lifecycle clear to the caller.
+The helper should still keep the final ownership and **lifecycle** clear to the caller.
 
 ---
 
 #### 31.12 Script-Created Infrastructure Must Be Cleanable
 
-Creating runtime infrastructure through code also means Lily is responsible for removing or replacing it correctly.
+Creating **runtime infrastructure** through code also means Lily is responsible for removing or replacing it correctly.
 
 A system that creates an Instance must define whether that Instance:
 
@@ -2844,7 +2858,7 @@ A system that creates an Instance must define whether that Instance:
 - is replaced during reinitialization
 - is destroyed when the owner is destroyed
 
-### Example
+### **Example**
 
 ```lua
 local function destroyFoo(fooContext)
@@ -2855,11 +2869,11 @@ local function destroyFoo(fooContext)
 end
 ```
 
-Creation without lifecycle ownership is incomplete architecture.
+Creation without **lifecycle** ownership is incomplete architecture.
 
 ---
 
-#### 31.13 Source Control Should Describe the Runtime Structure
+#### 31.13 **source control** Should Describe the Runtime Structure
 
 One of the main reasons Lily creates infrastructure through code is that important runtime architecture should be reviewable from the repository.
 
@@ -2867,23 +2881,27 @@ A reviewer should be able to see changes to:
 
 - remote names
 - folder names
-- attributes
+- **Attributes**
 - interface structure
 - object relationships
 - default configuration
 - ownership
 - initialization
-- cleanup
+- **cleanup**
 
 without needing to compare a separate manually edited Studio hierarchy.
 
-> **Rule:** Lily runtime infrastructure belongs in source-controlled code, not hidden manual setup.
+> **Rule:** Lily **runtime infrastructure** belongs in source-controlled code, not hidden manual setup.
 
 ---
 
+## Performance and Scale
+
+Performance rules sit together because they describe how Lily controls repeated work, **CPU usage**, memory ownership, **cleanup**, scaling behavior, and Luau runtime limits without sacrificing correctness or readability.
+
 ### 32. Performance
 
-After correctness, ownership, and lifecycle are established, Lily should consider the cost of repeating the same work at scale. An operation that is insignificant during one-time setup can become expensive when it executes every frame, across large collections, or through many active systems at once.
+After correctness, ownership, and **lifecycle** are established, Lily should consider the cost of repeating the same work at scale. An operation that is insignificant during one-time setup can become expensive when it executes every frame, across large collections, or through many active systems at once.
 
 Performance work should focus first on repeated work rather than one-time setup work.
 
@@ -2934,9 +2952,10 @@ Lily should still favor readable solutions and should not make ordinary code dif
 
 Controlled loops, frame updates, schedulers, recurring callbacks, and other repeated runtime paths must never perform hierarchy discovery or wait for Instances to appear. Any object that the loop depends on should be resolved during setup, stored by the owning system, and reused directly while the loop is active.
 
-> **Hard rule:** Never use `WaitForChild()` or similar hierarchy lookup work inside a controlled or repeated loop.
+> [!IMPORTANT]
+> **Hard rule:** **Never use `WaitForChild()` or similar hierarchy lookup work inside a controlled or repeated loop.**
 
-### Avoid
+### **Avoid**
 
 ```lua
 runService.Heartbeat:Connect(function()
@@ -2945,7 +2964,7 @@ runService.Heartbeat:Connect(function()
 end)
 ```
 
-### Preferred
+### **Preferred**
 
 ```lua
 local foo = parent:WaitForChild("Foo")
@@ -2991,7 +3010,7 @@ reuse cached references
 
 A repeated runtime path should operate on data and references that are already available. It should not discover its own dependencies every time it runs.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local fooContext = {
@@ -3011,15 +3030,16 @@ A controlled loop should not unexpectedly pause because one iteration is waiting
 
 Avoid yielding operations inside controlled repeated work, including any operation whose purpose is to wait for setup that should already have completed.
 
-If a dependency may genuinely appear later, Lily should handle that through a deliberate event-driven lifecycle rather than placing a wait inside the hot loop.
+If a dependency may genuinely appear later, Lily should handle that through a deliberate **event-driven** **lifecycle** rather than placing a wait inside the hot loop.
 
 > **Rule:** Setup resolves dependencies. Controlled loops only perform the work they were created to perform.
 
-#### 32.9 Background Loops Are Forbidden by Default
+#### 32.9 **background loops** Are Forbidden by Default
 
-Lily Studio should not run background loops simply to keep a script active, repeatedly check state, refresh values, or perform work that could instead be triggered by an event, signal, callback, or direct state change.
+Lily Studio should not run **background loops** simply to keep a script active, repeatedly check state, refresh values, or perform work that could instead be triggered by an event, signal, callback, or direct state change.
 
-> **Hard rule:** A Lily script or module should never have a background loop running unless the feature genuinely requires continuous repeated work.
+> [!IMPORTANT]
+> **Hard rule:** **A Lily script or module should never have a **background loop** running unless the feature genuinely requires continuous repeated work.**
 
 This applies to patterns such as:
 
@@ -3048,11 +3068,11 @@ These patterns should not exist only because the system needs to "keep checking"
 
 ---
 
-#### 32.10 Prefer Event-Driven Work Over Background Loops
+#### 32.10 Prefer **event-driven** Work Over **background loops**
 
-If the work only needs to happen when something changes, connect to the change instead of running a background loop.
+If the work only needs to happen when something changes, connect to the change instead of running a **background loop**.
 
-### Avoid
+### **Avoid**
 
 ```lua
 task.spawn(function()
@@ -3067,7 +3087,7 @@ task.spawn(function()
 end)
 ```
 
-### Preferred
+### **Preferred**
 
 ```lua
 object:GetAttributeChangedSignal("foo"):Connect(function()
@@ -3075,13 +3095,13 @@ object:GetAttributeChangedSignal("foo"):Connect(function()
 end)
 ```
 
-The event-driven version performs work only when the state actually changes, which makes the behavior easier to reason about and avoids unnecessary repeated work.
+The **event-driven** version performs work only when the state actually changes, which makes the behavior easier to reason about and avoids unnecessary repeated work.
 
 ---
 
-#### 32.11 Background Loops Must Have a Real Runtime Requirement
+#### 32.11 **background loops** Must Have a Real Runtime Requirement
 
-A background loop is acceptable only when the feature itself requires continuous or recurring work that cannot be represented correctly by an event-driven path.
+A **background loop** is acceptable only when the feature itself requires continuous or recurring work that cannot be represented correctly by an **event-driven** path.
 
 Examples may include:
 
@@ -3095,13 +3115,13 @@ Examples may include:
 
 The existence of a loop must be tied to a clear feature requirement, not developer convenience.
 
-> **Rule:** "It was easier to write as a loop" is not a valid reason for a Lily background loop.
+> **Rule:** "It was easier to write as a loop" is not a valid reason for a Lily **background loop**.
 
 ---
 
-#### 32.12 Every Background Loop Must Have Ownership and a Stop Condition
+#### 32.12 Every **background loop** Must Have Ownership and a Stop Condition
 
-If a background loop is necessary, the owning system must define:
+If a **background loop** is necessary, the owning system must define:
 
 - who starts the loop
 - when the loop starts
@@ -3112,9 +3132,9 @@ If a background loop is necessary, the owning system must define:
 - what happens when the owner is destroyed
 - how duplicate loops are prevented
 
-A loop without a defined stop condition or lifecycle is not acceptable Lily code.
+A loop without a defined stop condition or **lifecycle** is not acceptable Lily code.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local isRunning = true
@@ -3135,13 +3155,13 @@ For larger systems, the stop state should normally belong to the runtime context
 
 ---
 
-#### 32.13 Background Loops Must Not Outlive Their Owner
+#### 32.13 **background loops** Must Not Outlive Their Owner
 
 A background task must stop when the object, context, module instance, or runtime system that owns it is destroyed.
 
 Do not allow orphaned loops to continue running after their state, UI, Instances, or connections have already been cleaned up.
 
-A Lily lifecycle should remain symmetrical:
+A Lily **lifecycle** should remain symmetrical:
 
 ```text
 owner starts
@@ -3157,16 +3177,16 @@ background work stops
 
 ---
 
-#### 32.14 Do Not Stack Background Loops
+#### 32.14 Do Not Stack **background loops**
 
-Setup or restart logic must not create another background loop while an existing loop for the same owner is still running.
+Setup or restart logic must not create another **background loop** while an existing loop for the same owner is still running.
 
-Duplicate background loops can cause:
+Duplicate **background loops** can cause:
 
 - repeated updates
 - duplicated networking
 - conflicting state changes
-- unnecessary CPU usage
+- unnecessary **CPU usage**
 - memory retention
 - difficult timing bugs
 - behavior that becomes less deterministic
@@ -3175,11 +3195,11 @@ If restart behavior is required, the old loop must be stopped before a replaceme
 
 ---
 
-#### 32.15 Necessary Background Loops Should Be Documented
+#### 32.15 Necessary **background loops** Should Be Documented
 
-When a background loop is genuinely required, the reason should be documented if that reason is not immediately obvious from the code.
+When a **background loop** is genuinely required, the reason should be documented if that reason is not immediately obvious from the code.
 
-### Example
+### **Example**
 
 ```lua
 -- This loop advances time-based state continuously because the system has no event that represents progression over time.
@@ -3195,7 +3215,7 @@ The comment should explain **why continuous work is required**, not merely state
 
 ---
 
-#### 32.16 Background Loops Must Remain Controlled
+#### 32.16 **background loops** Must Remain Controlled
 
 A necessary loop still follows the rest of the Lily convention.
 
@@ -3209,25 +3229,27 @@ It must not:
 - mutate state owned by unrelated systems
 - run without a stop condition
 - depend on accidental timing
-- silently survive owner cleanup
+- silently survive owner **cleanup**
 
-> **Final rule:** Lily has no uncontrolled background loops. Continuous work exists only when the feature requires it, and every loop has explicit ownership, purpose, timing, and cleanup.
+> [!IMPORTANT]
+> **Final rule:** **Lily has no uncontrolled **background loops**. Continuous work exists only when the feature requires it, and every loop has explicit ownership, purpose, timing, and **cleanup**.**
 
 #### 32.17 Optimization Is Part of the Design
 
 Lily Studio does not treat optimization as something that is added only after a system begins to lag. Performance should be considered while the architecture is being designed so the normal implementation already avoids unnecessary work, excessive allocation, uncontrolled background activity, and resources that remain alive after their owner is gone.
 
-> **Main rule:** Lily code should be designed to remain efficient, stable, and predictable as the amount of work increases.
+> [!IMPORTANT]
+> **Main rule:** **Lily code should be designed to remain efficient, stable, and predictable as the amount of work increases.**
 
-Optimization should focus on reducing work that is repeated frequently, removing unnecessary allocations, preventing duplicate runtime behavior, and making sure every created resource has a controlled lifecycle.
+Optimization should focus on reducing work that is repeated frequently, removing unnecessary allocations, preventing duplicate runtime behavior, and making sure every created resource has a controlled **lifecycle**.
 
 ---
 
-#### 32.18 Memory Leaks Are Not Acceptable
+#### 32.18 **memory leaks** Are Not Acceptable
 
 Lily systems must not leave behind references, connections, tasks, Instances, tables, callbacks, or runtime contexts after the system that owns them has been destroyed.
 
-Common causes of memory leaks include:
+Common causes of **memory leaks** include:
 
 - `RBXScriptConnection` objects that are never disconnected
 - tables that keep references to destroyed objects
@@ -3239,9 +3261,9 @@ Common causes of memory leaks include:
 - events that retain callbacks indefinitely
 - objects that are removed from the hierarchy but still referenced by Luau state
 
-A cleanup path should release every resource the owner created.
+A **cleanup path** should release every resource the owner created.
 
-### Preferred
+### **Preferred**
 
 ```lua
 local function destroyFoo(fooContext)
@@ -3259,17 +3281,18 @@ local function destroyFoo(fooContext)
 end
 ```
 
-The exact cleanup depends on the system, but the ownership rule remains the same.
+The exact **cleanup** depends on the system, but the ownership rule remains the same.
 
-> **Hard rule:** Lily should not leave memory behind after an owner is destroyed.
+> [!IMPORTANT]
+> **Hard rule:** **Lily should not leave memory behind after an owner is destroyed.**
 
 ---
 
-#### 32.19 Avoid High CPU Usage
+#### 32.19 Avoid High **CPU usage**
 
 Lily code should not perform work more often than the feature requires.
 
-High CPU usage is often caused by:
+High **CPU usage** is often caused by:
 
 - unnecessary frame updates
 - polling loops
@@ -3284,7 +3307,7 @@ High CPU usage is often caused by:
 
 The preferred Lily approach is to perform work only when there is a reason to perform it.
 
-### Preferred flow
+### **Preferred flow**
 
 ```text
 state changes
@@ -3296,7 +3319,7 @@ only required work runs
 cached state is updated
 ```
 
-### Avoid
+### **Avoid**
 
 ```text
 background loop
@@ -3376,7 +3399,7 @@ When shared work is appropriate, one system should own the calculation and expos
 
 Lily should prefer targeted updates instead of rebuilding or recalculating an entire system when only one part changed.
 
-### Preferred concept
+### **Preferred concept**
 
 ```lua
 local function setFooValue(fooContext, value)
@@ -3397,7 +3420,7 @@ This pattern is especially important for:
 - expensive calculations
 - runtime state synchronization
 
-> **Rule:** If nothing changed, Lily should normally do nothing.
+> **Rule:** **If nothing changed, Lily should normally do nothing.**
 
 ---
 
@@ -3411,7 +3434,7 @@ When writing code that may process many values or objects, consider:
 - how many entries it processes
 - whether the work grows linearly or worse
 - whether temporary memory grows over time
-- whether cleanup removes old state
+- whether **cleanup** removes old state
 - whether events can become duplicated
 - whether repeated work can be shared or cached
 - whether unchanged objects can be skipped
@@ -3424,7 +3447,7 @@ The goal is not to optimize imaginary problems. The goal is to avoid architectur
 
 Optimization must never make behavior unpredictable, unsafe, or difficult to maintain.
 
-Do not remove required validation, lifecycle handling, ownership, or synchronization only to save a small amount of CPU time.
+Do not remove required validation, **lifecycle** handling, ownership, or synchronization only to save a small amount of CPU time.
 
 A good optimization should normally do one or more of the following:
 
@@ -3434,7 +3457,7 @@ A good optimization should normally do one or more of the following:
 - reduce duplicate callbacks
 - reuse stable references
 - skip unchanged state
-- improve cleanup
+- improve **cleanup**
 - reduce unnecessary networking
 - simplify a hot path
 
@@ -3446,7 +3469,7 @@ while preserving the same intended behavior.
 
 #### 32.26 Every Resource Has a Lifetime
 
-Memory and CPU ownership should be treated as part of the system lifecycle.
+Memory and CPU ownership should be treated as part of the system **lifecycle**.
 
 A Lily developer should be able to explain:
 
@@ -3455,10 +3478,10 @@ A Lily developer should be able to explain:
 - what data the work owns
 - what resources it allocates
 - what event or function stops it
-- what is removed during cleanup
+- what is removed during **cleanup**
 - whether anything can continue after destruction
 
-If those answers are unclear, the lifecycle is not controlled enough.
+If those answers are unclear, the **lifecycle** is not controlled enough.
 
 ---
 
@@ -3470,13 +3493,13 @@ Examples of weak fixes include:
 
 - adding longer waits to an unnecessary polling loop
 - suppressing warnings caused by duplicate initialization
-- reducing update frequency when the update should be event-driven
+- reducing update frequency when the update should be **event-driven**
 - clearing one table while another reference still keeps the same objects alive
 - adding more checks around a system that should have one controlled owner
 
 Lily Studio should correct the source of the waste whenever possible.
 
-> **Final performance rule:** Lily code should use only the CPU, memory, networking, and runtime work that the feature actually requires, and every allocated resource must have an intentional owner and cleanup path.
+> **Final performance rule:** Lily code should use only the CPU, memory, networking, and runtime work that the feature actually requires, and every allocated resource must have an intentional owner and **cleanup path**.
 
 
 ### 33. Luau Local and Register Limits
@@ -3492,7 +3515,7 @@ exceeded limit 200
 
 For large modules, cold private helpers can be grouped under an internal table when doing so keeps the file below Luau's limit.
 
-##### Example
+##### **Example**
 
 ```lua
 local internals = {}
@@ -3522,7 +3545,7 @@ The following patterns should normally be removed during review because they wea
 
 ---
 
-#### Conditional nesting
+#### **conditional nesting**
 
 ```lua
 if fooContext then
@@ -3568,7 +3591,7 @@ Use the change source instead.
 
 ---
 
-#### `pairs()` and `ipairs()`
+#### `pairs()` and `i`pairs()``
 
 ```lua
 for key, value in pairs(data) do
@@ -3609,7 +3632,7 @@ Use named options when several behaviors need to be selected.
 
 #### Giant scripts
 
-Do not place an entire feature inside one `Script` or `LocalScript` when the behavior belongs in focused ModuleScripts.
+Do not place an entire feature inside one `Script` or `LocalScript` when the behavior belongs in focused **ModuleScripts**.
 
 ---
 
@@ -3625,9 +3648,9 @@ Do not depend on a hidden Studio UI hierarchy when Lily can create the interface
 
 ---
 
-#### ValueObjects used only as metadata
+#### **ValueObjects** used only as metadata
 
-Use Attributes for simple Instance-owned data.
+Use **Attributes** for simple Instance-owned data.
 
 ---
 
@@ -3753,34 +3776,34 @@ end
 return module
 ```
 
-The important part is not the exact names in the example. The important part is the structure: strict typing, alphabetical top sections, flat control flow, focused helpers, clear state ownership, generalized iteration, predictable lifecycle, and a small public module API.
+The important part is not the exact names in the example. The important part is the structure: strict typing, alphabetical top sections, flat control flow, focused helpers, clear **state ownership**, generalized iteration, predictable **lifecycle**, and a small public module API.
 
 ---
 
 ### 37. Final Standard
 
-Lily Studio code should feel consistent regardless of which developer originally wrote it. A file should be straightforward to navigate, important behavior should be easy to locate, and the ownership and lifecycle of the system should remain clear without forcing the reader to trace hidden state through unrelated parts of the codebase.
+Lily Studio code should feel consistent regardless of which developer originally wrote it. A file should be straightforward to navigate, important behavior should be easy to locate, and the ownership and **lifecycle** of the system should remain clear without forcing the reader to trace hidden state through unrelated parts of the codebase.
 
 A strong Lily implementation should normally have:
 
 - clear names
 - simple and longer enough names to explain meaning
 - flat control flow
-- guard clauses without redundant checks
-- no conditional nesting
+- **guard clauses** without redundant checks
+- no **conditional nesting**
 - minimal use of `Script` and `LocalScript`
-- most behavior in ModuleScripts
-- event-driven state changes
+- most behavior in **ModuleScripts**
+- **event-driven** state changes
 - generalized Luau iteration
-- no `pairs()` or `ipairs()`
+- no `pairs()` or `i`pairs()``
 - strong Luau typing
-- Attributes for simple Instance metadata
-- script-created runtime infrastructure, including networking objects, runtime folders, bindables, and UI
-- Lily-owned packages only
-- clean lifecycle ownership
-- aggressive cleanup of owned tables, stale references, caches, and registries
-- no unnecessary background loops, and every required loop has explicit ownership and cleanup
-- optimized runtime behavior with no uncontrolled memory growth or unnecessary CPU usage
+- **Attributes** for simple Instance metadata
+- **Script-created runtime infrastructure**, including networking objects, runtime folders, bindables, and UI
+- **Lily-owned packages** only
+- clean **lifecycle** ownership
+- aggressive **cleanup** of owned tables, stale references, caches, and registries
+- no unnecessary **background loops**, and every required loop has explicit ownership and **cleanup**
+- optimized runtime behavior with no uncontrolled memory growth or unnecessary **CPU usage**
 - no hierarchy discovery or yielding inside controlled loops
 - predictable top-level organization
 - alphabetical declarations inside logical sections
