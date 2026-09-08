@@ -22,7 +22,7 @@ It should look clear.
 - [5. No Conditional Nesting](#5-no-conditional-nesting)
 - [6. Avoid `else` and `elseif`](#6-avoid-else-and-elseif)
 - [7. Positive Conditions](#7-positive-conditions)
-- [8. Loops](#8-loops)
+- [8. Event-Driven Code and Loops](#8-event-driven-code-and-loops)
 - [9. Functions](#9-functions)
 - [10. Function Arguments](#10-function-arguments)
 - [11. State](#11-state)
@@ -31,21 +31,22 @@ It should look clear.
 - [14. Lily Separators](#14-lily-separators)
 - [15. Formatting](#15-formatting)
 - [16. Type Checking](#16-type-checking)
-- [17. Services](#17-services)
-- [18. Comments](#18-comments)
-- [19. Error Handling](#19-error-handling)
-- [20. Performance](#20-performance)
-- [21. Luau Local/Register Limit](#21-luau-localregister-limit)
-- [22. Avoid Boolean Expression Control Flow](#22-avoid-boolean-expression-control-flow)
-- [23. Composition Over Inheritance](#23-composition-over-inheritance)
-- [24. Public State](#24-public-state)
-- [25. Generic Solutions](#25-generic-solutions)
-- [26. Lily Anti-Patterns](#26-lily-anti-patterns)
-- [27. Example Lily Function](#27-example-lily-function)
-- [28. Example Lily Module](#28-example-lily-module)
-- [29. Review Checklist](#29-review-checklist)
-- [30. Main Lily Principle](#30-main-lily-principle)
-
+- [17. Alphabetical Top-Level Order](#17-alphabetical-top-level-order)
+- [18. Attributes Over ValueObjects](#18-attributes-over-valueobjects)
+- [19. Script-Created UI Only](#19-script-created-ui-only)
+- [20. Comments](#20-comments)
+- [21. Error Handling](#21-error-handling)
+- [22. Performance](#22-performance)
+- [23. Luau Local/Register Limit](#23-luau-localregister-limit)
+- [24. Avoid Boolean Expression Control Flow](#24-avoid-boolean-expression-control-flow)
+- [25. Composition Over Inheritance](#25-composition-over-inheritance)
+- [26. Public State](#26-public-state)
+- [27. Generic Solutions](#27-generic-solutions)
+- [28. Lily Anti-Patterns](#28-lily-anti-patterns)
+- [29. Example Lily Function](#29-example-lily-function)
+- [30. Example Lily Module](#30-example-lily-module)
+- [31. Review Checklist](#31-review-checklist)
+- [32. Main Lily Principle](#32-main-lily-principle)
 ---
 
 # 1. Main Goals
@@ -91,7 +92,7 @@ This is one of the most important Lily rules.
 - RemoteFunction names
 - payload fields
 - default values
-- effect timing
+- runtime timing
 - state behavior
 - cleanup timing
 - input behavior
@@ -109,7 +110,7 @@ remote:FireServer({
 	value = value,
 	enabled = enabled,
 })
-``````
+```
 
 a cleanup should **not** silently change it to:
 
@@ -118,7 +119,7 @@ remote:FireServer({
 	amount = value,
 	active = enabled,
 })
-``````
+```
 
 Even if the new names seem better, that is a behavior/API change.
 
@@ -156,17 +157,17 @@ local fooController
 local function updateFoo()
 end
 
-function module.setActiveProfile()
+function module.setActiveContext()
 end
-``````
+```
 
 ### Avoid
 
 ```lua
-local ProfileToken
+local ContextToken
 local selected_bars
 local COLORBRIGHTNESS
-``````
+```
 
 ### Quick rule
 
@@ -186,7 +187,7 @@ local connection
 local fooController
 local fooKey
 local barList
-``````
+```
 
 ### Avoid
 
@@ -196,7 +197,7 @@ local conn
 local ctrl
 local prof
 local sel
-``````
+```
 
 ### Why
 
@@ -220,7 +221,7 @@ local isFirstRun
 local hasAccess
 local shouldUpdate
 local wasCalled
-``````
+```
 
 ### Avoid
 
@@ -229,7 +230,7 @@ local running
 local first
 local access
 local flag
-``````
+```
 
 ### Why
 
@@ -237,7 +238,7 @@ This makes conditions easier to read:
 
 ```lua
 if hasAccess then
-``````
+```
 
 reads naturally.
 
@@ -254,9 +255,9 @@ updateFoo()
 createObject()
 destroyContext()
 sendInput()
-resolveProfile()
+resolveContext()
 releaseFoo()
-``````
+```
 
 ### Avoid
 
@@ -265,7 +266,7 @@ foo()
 objectThing()
 fooContextData()
 inputStuff()
-``````
+```
 
 ---
 
@@ -281,7 +282,7 @@ onInputEnded()
 onClick()
 onRemoteEvent()
 onAttributeChanged()
-``````
+```
 
 ### Avoid
 
@@ -290,7 +291,7 @@ input()
 click()
 remote()
 changed()
-``````
+```
 
 ### Quick rule
 
@@ -314,7 +315,7 @@ local function updateFoo(fooContext)
 
 	fooContext.foo.Enabled = true
 end
-``````
+```
 
 ## Avoid
 
@@ -328,7 +329,7 @@ local function updateFoo(fooContext)
 		end
 	end
 end
-``````
+```
 
 ## Why
 
@@ -359,7 +360,7 @@ local function sendInput(fooContext, keyCode, pressed)
 		pressed = pressed,
 	})
 end
-``````
+```
 
 If the caller already guarantees a valid context and remote, keep the function simple:
 
@@ -372,7 +373,7 @@ local function sendInput(fooContext, keyCode, pressed)
 		pressed = pressed,
 	})
 end
-``````
+```
 
 ### Quick rule
 
@@ -394,7 +395,7 @@ if fooContext then
 		updateFoo(foo)
 	end
 end
-``````
+```
 
 ## Prefer
 
@@ -403,7 +404,7 @@ if not fooContext then return end
 if not foo then return end
 
 updateFoo(foo)
-``````
+```
 
 ---
 
@@ -421,7 +422,7 @@ for _, bar in foo do
 		end
 	end
 end
-``````
+```
 
 ### Prefer
 
@@ -432,7 +433,7 @@ for _, bar in foo do
 
 	updateItem(bar)
 end
-``````
+```
 
 ---
 
@@ -452,7 +453,7 @@ if fooContext then
 		end
 	end
 end
-``````
+```
 
 write:
 
@@ -469,7 +470,7 @@ end
 if not canUpdateFoo(fooContext) then return end
 
 updateFoo(fooContext.foo)
-``````
+```
 
 ### Quick rule
 
@@ -493,7 +494,7 @@ if enabled then
 else
 	stopFoo()
 end
-``````
+```
 
 ### Prefer
 
@@ -504,7 +505,7 @@ if enabled then
 end
 
 stopFoo()
-``````
+```
 
 ---
 
@@ -520,7 +521,7 @@ elseif mode == "Even" then
 elseif mode == "Odd" then
 	selectOdd()
 end
-``````
+```
 
 ### Prefer a lookup when it fits
 
@@ -535,7 +536,7 @@ local handler = handlers[mode]
 if not handler then return end
 
 handler()
-``````
+```
 
 ### Why
 
@@ -557,7 +558,7 @@ Prefer positive names and positive conditions.
 if isRunning then
 	updateFoo()
 end
-``````
+```
 
 ## Avoid
 
@@ -565,19 +566,19 @@ end
 if not isNotRunning then
 	updateFoo()
 end
-``````
+```
 
 ## Good
 
 ```lua
 local hasValue = value ~= nil
-``````
+```
 
 ## Avoid
 
 ```lua
 local isMissingValue = value == nil
-``````
+```
 
 Use the positive form unless the negative state is the real concept.
 
@@ -615,7 +616,7 @@ while true do
 
 	task.wait()
 end
-``````
+```
 
 ### Avoid
 
@@ -626,7 +627,7 @@ while task.wait(.1) do
 		updateValue(object.Value)
 	end
 end
-``````
+```
 
 ### Prefer
 
@@ -634,7 +635,7 @@ end
 object:GetPropertyChangedSignal("Value"):Connect(function()
 	updateValue(object.Value)
 end)
-``````
+```
 
 ---
 
@@ -648,7 +649,7 @@ If Roblox already provides a signal for the change, use it.
 object:GetPropertyChangedSignal("Enabled"):Connect(function()
 	updateFoo(object.Enabled)
 end)
-``````
+```
 
 ### Attributes
 
@@ -656,7 +657,7 @@ end)
 object:GetAttributeChangedSignal("active"):Connect(function()
 	updateState(object:GetAttribute("active"))
 end)
-``````
+```
 
 ### Value objects
 
@@ -664,7 +665,7 @@ end)
 valueObject.Changed:Connect(function(value)
 	updateValue(value)
 end)
-``````
+```
 
 ### Remote events
 
@@ -672,14 +673,14 @@ end)
 remote.OnClientEvent:Connect(function(arguments)
 	updateState(arguments)
 end)
-``````
+```
 
 ### Input
 
 ```lua
 userInputService.InputBegan:Connect(onInputBegan)
 userInputService.InputEnded:Connect(onInputEnded)
-``````
+```
 
 ### Quick rule
 
@@ -700,7 +701,7 @@ runService.Heartbeat:Connect(function()
 		updateValue(fooContext.value)
 	end
 end)
-``````
+```
 
 ### Prefer
 
@@ -713,7 +714,7 @@ local function setValue(fooContext, value)
 	fooContext.value = value
 	updateValue(fooContext)
 end
-``````
+```
 
 ---
 
@@ -723,7 +724,7 @@ Some Lily systems genuinely need per-frame updates.
 
 Examples include:
 
-- effect animation
+- system animation
 - movement interpolation
 - synchronized clocks
 - real-time visual animation
@@ -733,13 +734,13 @@ Those are valid uses of:
 
 ```lua
 runService.Heartbeat
-``````
+```
 
 or:
 
 ```lua
 runService.RenderStepped
-``````
+```
 
 Do not use a frame connection for ordinary state watching.
 
@@ -761,7 +762,7 @@ A one-time iteration is fine when Lily actually needs to process several items.
 for _, bar in bars do
 	disconnectItem(bar)
 end
-``````
+```
 
 ### Good
 
@@ -769,7 +770,7 @@ end
 for key, value in data do
 	copy[key] = value
 end
-``````
+```
 
 What Lily avoids is a loop whose job is to repeatedly wait and check for changes.
 
@@ -784,24 +785,24 @@ Lily uses generalized Luau iteration.
 ```lua
 for key, value in data do
 end
-``````
+```
 
 ```lua
 for index, bar in bars do
 end
-``````
+```
 
 ### Avoid
 
 ```lua
 for key, value in pairs(data) do
 end
-``````
+```
 
 ```lua
 for index, bar in ipairs(bars) do
 end
-``````
+```
 
 ### Quick rule
 
@@ -822,7 +823,7 @@ local function setEnabled(fooContext, enabled)
 	fooContext.enabled = enabled
 	updateViews(fooContext)
 end
-``````
+```
 
 This is better than storing the value and having another system constantly inspect it.
 
@@ -844,7 +845,7 @@ state setter runs
 state updates
     ↓
 bars / remotes / foos react
-``````
+```
 
 This makes the data flow easy to understand.
 
@@ -864,7 +865,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-``````
+```
 
 Do not create signals without a clear cleanup path.
 
@@ -903,7 +904,7 @@ end
 
 local function updateFooViews()
 end
-``````
+```
 
 ## Avoid
 
@@ -913,7 +914,7 @@ One function that:
 - creates UI
 - changes state
 - sends remotes
-- starts effects
+- starts systems
 - destroys objects
 - handles cleanup
 
@@ -936,7 +937,7 @@ A helper should reduce at least one of these:
 local function enableObject(object)
 	object.Enabled = true
 end
-``````
+```
 
 if it is used once and adds no meaning.
 
@@ -950,7 +951,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-``````
+```
 
 This is useful because the cleanup behavior is repeated and meaningful.
 
@@ -980,7 +981,7 @@ Function calls should be obvious when read.
 
 ```lua
 updateFoo(foo, true, false)
-``````
+```
 
 The reader cannot easily tell what `true` and `false` mean.
 
@@ -991,7 +992,7 @@ updateFoo(foo, {
 	replicate = true,
 	force = false,
 })
-``````
+```
 
 ---
 
@@ -1001,7 +1002,7 @@ updateFoo(foo, {
 
 ```lua
 createFoo(name, nil, true)
-``````
+```
 
 ### Prefer
 
@@ -1009,7 +1010,7 @@ createFoo(name, nil, true)
 createFoo(name, {
 	enabled = true,
 })
-``````
+```
 
 ---
 
@@ -1021,7 +1022,7 @@ Simple functions can stay simple:
 
 ```lua
 setBrightness(value)
-``````
+```
 
 ### Quick rule
 
@@ -1037,13 +1038,13 @@ State should have a clear owner.
 
 ## 11.1 Avoid Global State
 
-Prefer state owned by the module, feature, profile, or object.
+Prefer state owned by the module, feature, context, or object.
 
 ### Good
 
 ```lua
 local fooContexts = {}
-``````
+```
 
 ```lua
 fooContexts[fooKey] = {
@@ -1051,19 +1052,19 @@ fooContexts[fooKey] = {
 	barList = {},
 	destroyed = false,
 }
-``````
+```
 
 ---
 
 ## 11.2 Separate Independent Instances
 
-If several profiles, pools, controllers, or effects can exist at the same time, they should not accidentally share state.
+If several contexts, pools, controllers, or systems can exist at the same time, they should not accidentally share state.
 
 ### Bad idea
 
 ```lua
 local currentValue = 0
-``````
+```
 
 when multiple independent objects need their own value.
 
@@ -1071,7 +1072,7 @@ when multiple independent objects need their own value.
 
 ```lua
 fooContexts[fooKey].value = 0
-``````
+```
 
 ---
 
@@ -1079,7 +1080,7 @@ fooContexts[fooKey].value = 0
 
 Color state should stay near color behavior.
 
-Effect state should stay near effect behavior.
+System state should stay near runtime behavior.
 
 Pool state should stay near pool behavior.
 
@@ -1105,8 +1106,8 @@ This includes:
 - runtime contexts
 - cached objects
 - tasks associated with an object
-- profile state
-- effect state
+- context-owned state
+- runtime state
 - references that could block garbage collection
 
 ---
@@ -1123,7 +1124,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-``````
+```
 
 ---
 
@@ -1133,7 +1134,7 @@ When a context is destroyed:
 
 ```lua
 fooContexts[fooKey] = nil
-``````
+```
 
 Do not keep stale entries.
 
@@ -1201,7 +1202,7 @@ local module = {}
 
 --————————————————————————————————————————————————————————————————————--
 
-local fooProfile = "Foo"
+local fooContext = "Foo"
 
 --————————————————————————————————————————————————————————————————————--
 
@@ -1232,7 +1233,7 @@ end
 --————————————————————————————————————————————————————————————————————--
 
 return module
-``````
+```
 
 ### Why
 
@@ -1246,7 +1247,7 @@ Use the standard Lily separator:
 
 ```lua
 --————————————————————————————————————————————————————————————————————--
-``````
+```
 
 Use it between:
 
@@ -1266,7 +1267,7 @@ local function bar()
 end
 
 --————————————————————————————————————————————————————————————————————--
-``````
+```
 
 ### Quick rule
 
@@ -1289,7 +1290,7 @@ local function setState(fooContext, value)
 	fooContext.value = value
 	updateViews(fooContext)
 end
-``````
+```
 
 ### Avoid
 
@@ -1302,7 +1303,7 @@ local function setState(fooContext, value)
 	updateViews(fooContext)
 
 end
-``````
+```
 
 ---
 
@@ -1313,7 +1314,7 @@ end
 ```lua
 local x = math.clamp((mouseX - position.X) / size.X, 0, 1)
 local y = math.clamp((mouseY - position.Y) / size.Y, 0, 1)
-``````
+```
 
 ### Avoid
 
@@ -1323,7 +1324,7 @@ local x = math.clamp(
 	0,
 	1
 )
-``````
+```
 
 when the one-line version is still easy to read.
 
@@ -1340,7 +1341,7 @@ local button = interface.TextButton(parent, {
 	Text = title,
 	TextSize = 33,
 })
-``````
+```
 
 ### Quick rule
 
@@ -1362,7 +1363,7 @@ Production Lily modules should normally start with:
 
 ```lua
 --!strict
-``````
+```
 
 ### Why
 
@@ -1388,7 +1389,7 @@ before the code runs.
 local function getContext(fooKey: string): Context?
 	return fooContexts[fooKey]
 end
-``````
+```
 
 ### Avoid when the type is already known
 
@@ -1396,7 +1397,7 @@ end
 local function getContext(fooKey)
 	return fooContexts[fooKey]
 end
-``````
+```
 
 ---
 
@@ -1408,12 +1409,12 @@ end
 function module.setup(fooKey: string): boolean
 	return true
 end
-``````
+```
 
 ```lua
 local function updateFoo(foo: Foo): ()
 end
-``````
+```
 
 ### Why
 
@@ -1431,7 +1432,7 @@ export type Foo = {
 	enabled: boolean,
 	bars: { Instance },
 }
-``````
+```
 
 ```lua
 type Context = {
@@ -1439,7 +1440,7 @@ type Context = {
 	remote: RemoteEvent,
 	connections: { RBXScriptConnection },
 }
-``````
+```
 
 ### Avoid
 
@@ -1457,7 +1458,7 @@ export type FooData = {
 	title: string,
 	category: string,
 }
-``````
+```
 
 Keep internal implementation types private when outside code does not need them.
 
@@ -1471,7 +1472,7 @@ Keep internal implementation types private when outside code does not need them.
 local fooContexts: { [string]: Context } = {}
 local connections: { RBXScriptConnection } = {}
 local barList: { number } = {}
-``````
+```
 
 ### Why
 
@@ -1485,12 +1486,12 @@ If a value can really be missing:
 
 ```lua
 local activeFooKey: string?
-``````
+```
 
 ```lua
 local function getContext(fooKey: string): Context?
 end
-``````
+```
 
 Do not make everything optional just to avoid type errors.
 
@@ -1509,7 +1510,7 @@ local function useRemote(remote: Instance?)
 
 	remote:FireServer()
 end
-``````
+```
 
 After the guards, Luau understands that `remote` is a `RemoteEvent`.
 
@@ -1523,14 +1524,14 @@ Do not use `any` just to silence the type checker.
 
 ```lua
 local value: any = arguments.value
-``````
+```
 
 ### Prefer
 
 ```lua
 local value: unknown = arguments.value
 if type(value) ~= "number" then return end
-``````
+```
 
 ---
 
@@ -1540,7 +1541,7 @@ if type(value) ~= "number" then return end
 
 ```lua
 local remote = object :: RemoteEvent
-``````
+```
 
 when the object has not been verified.
 
@@ -1550,7 +1551,7 @@ when the object has not been verified.
 if not object:IsA("RemoteEvent") then return end
 
 local remote = object
-``````
+```
 
 Use casts only when the architecture guarantees the type and Luau cannot infer it.
 
@@ -1580,7 +1581,7 @@ local function onRemote(arguments: unknown)
 
 	updateValue(value)
 end
-``````
+```
 
 ### Quick rule
 
@@ -1603,11 +1604,33 @@ before changing behavior.
 
 ---
 
-# 17. Services
+# 17. Alphabetical Top-Level Order
 
-Keep Roblox services in alphabetical order when practical.
+Anything grouped near the top of a Lily file should be kept in **alphabetical order inside its own section**.
 
-## Good
+This rule is broader than just Roblox services.
+
+It applies to grouped top-level declarations such as:
+
+- Roblox services
+- required modules
+- dependency references
+- folder references
+- related constants
+- related configuration values
+- other declarations that belong to the same top-level group
+
+Do not mix unrelated categories together just to alphabetize the entire file.
+
+Alphabetize **inside each logical section**.
+
+---
+
+## 17.1 Services
+
+Roblox services should be alphabetized.
+
+### Good
 
 ```lua
 local collectionService = game:GetService("CollectionService")
@@ -1615,17 +1638,566 @@ local httpService = game:GetService("HttpService")
 local players = game:GetService("Players")
 local replicatedStorage = game:GetService("ReplicatedStorage")
 local serverScriptService = game:GetService("ServerScriptService")
-``````
+local tweenService = game:GetService("TweenService")
+local userInputService = game:GetService("UserInputService")
+```
+
+### Avoid
+
+```lua
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local userInputService = game:GetService("UserInputService")
+local collectionService = game:GetService("CollectionService")
+local players = game:GetService("Players")
+```
 
 Only request services the file actually uses.
 
-### Quick rule
+---
 
-> Alphabetical services make files easier to compare and scan.
+## 17.2 Required Modules
+
+Required modules grouped together should also be alphabetized by their local name.
+
+### Good
+
+```lua
+local bar = require(source:WaitForChild("bar"))
+local baz = require(source:WaitForChild("baz"))
+local foo = require(source:WaitForChild("foo"))
+```
+
+### Avoid
+
+```lua
+local foo = require(source:WaitForChild("foo"))
+local bar = require(source:WaitForChild("bar"))
+local baz = require(source:WaitForChild("baz"))
+```
 
 ---
 
-# 18. Comments
+## 17.3 Top-Level References
+
+Related top-level references should be alphabetized when they belong to the same group.
+
+### Good
+
+```lua
+local barFolder = source:WaitForChild("bar")
+local bazFolder = source:WaitForChild("baz")
+local fooFolder = source:WaitForChild("foo")
+```
+
+---
+
+## 17.4 Constants and Configuration
+
+Related constants should also be alphabetized when doing so does not hide a real dependency.
+
+### Good
+
+```lua
+local defaultFoo = 1
+local maximumFoo = 10
+local minimumFoo = 0
+```
+
+Dependency order is more important when one declaration uses another.
+
+### Good dependency order
+
+```lua
+local maximumFoo = 10
+local minimumFoo = 1
+local fooRange = maximumFoo - minimumFoo
+```
+
+Do not move `fooRange` above the values it needs just to force alphabetical order.
+
+---
+
+## 17.5 Keep Logical Sections Separate
+
+Do not create one giant alphabetized list containing unrelated things.
+
+### Good
+
+```lua
+local players = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+
+--————————————————————————————————————————————————————————————————————--
+
+local module = {}
+
+--————————————————————————————————————————————————————————————————————--
+
+local barFolder = source:WaitForChild("bar")
+local fooFolder = source:WaitForChild("foo")
+```
+
+The service group stays separate from the reference group.
+
+---
+
+### Quick rule
+
+> **Anything grouped at the top of a Lily file is alphabetized inside its logical section. Required dependency order takes priority when necessary.**
+
+---
+
+# 18. Attributes Over ValueObjects
+
+Lily prefers **Instance Attributes** for simple values that belong to an Instance.
+
+This means Lily should normally use:
+
+```lua
+object:SetAttribute("foo", true)
+```
+
+instead of creating separate Roblox ValueObjects such as:
+
+```lua
+local value = Instance.new("BoolValue")
+value.Name = "foo"
+value.Value = true
+value.Parent = object
+```
+
+---
+
+## 18.1 Use Attributes for Simple Instance Data
+
+Attributes are the standard Lily choice for lightweight data such as:
+
+- booleans
+- numbers
+- strings
+- IDs
+- names
+- modes
+- small configuration values
+- state that belongs directly to an Instance
+- metadata used by another Lily system
+
+### Good
+
+```lua
+object:SetAttribute("foo", true)
+object:SetAttribute("bar", 5)
+object:SetAttribute("baz", "Example")
+```
+
+### Read
+
+```lua
+local foo = object:GetAttribute("foo")
+local bar = object:GetAttribute("bar")
+```
+
+---
+
+## 18.2 React to Attribute Changes
+
+Lily is event-driven, so do not poll an Attribute in a loop.
+
+### Good
+
+```lua
+object:GetAttributeChangedSignal("foo"):Connect(function()
+	updateFoo(object:GetAttribute("foo"))
+end)
+```
+
+### Avoid
+
+```lua
+while true do
+	local foo = object:GetAttribute("foo")
+
+	if foo ~= previousFoo then
+		previousFoo = foo
+		updateFoo(foo)
+	end
+
+	task.wait()
+end
+```
+
+### Quick rule
+
+> **If an Attribute changes, react to its change signal. Do not repeatedly check it.**
+
+---
+
+## 18.3 Avoid ValueObjects for Simple Metadata
+
+Do not create these only to store simple Lily metadata:
+
+- `BoolValue`
+- `NumberValue`
+- `StringValue`
+- `IntValue`
+- `ObjectValue`
+
+### Avoid
+
+```lua
+local foo = Instance.new("StringValue")
+foo.Name = "foo"
+foo.Value = "bar"
+foo.Parent = object
+```
+
+### Prefer
+
+```lua
+object:SetAttribute("foo", "bar")
+```
+
+---
+
+## 18.4 Why Lily Uses Attributes
+
+Attributes are useful because they:
+
+- keep simple data directly on the Instance
+- avoid creating extra Instances
+- reduce hierarchy clutter
+- are easy to inspect in Roblox Studio
+- support change signals
+- replicate with the Instance
+- make ownership clear
+- reduce unnecessary object creation
+
+They also make the hierarchy easier to read because simple state does not need its own child Instance.
+
+---
+
+## 18.5 Attributes Are Not for Everything
+
+Attributes should be used for **simple Instance-owned data**.
+
+Do not force complex data into Attributes when a real Lua table, module, object, or runtime context is the better owner.
+
+For example, a large runtime structure should usually stay in Luau:
+
+```lua
+local fooContext = {
+	bars = {},
+	connections = {},
+	active = {},
+}
+```
+
+instead of trying to split the whole structure into many unrelated Attributes.
+
+### Quick rule
+
+> **Use Attributes for simple Instance metadata. Use Luau state for complex runtime data.**
+
+---
+
+## 18.6 Attribute Naming
+
+Attribute names should be:
+
+- descriptive
+- consistent
+- stable
+- easy to understand
+
+### Good
+
+```lua
+object:SetAttribute("fooEnabled", true)
+object:SetAttribute("fooMode", "bar")
+object:SetAttribute("fooId", 12)
+```
+
+### Avoid
+
+```lua
+object:SetAttribute("x", true)
+object:SetAttribute("v", "bar")
+object:SetAttribute("n", 12)
+```
+
+---
+
+## 18.7 Attribute Review Checklist
+
+- [ ] Simple Instance metadata uses Attributes
+- [ ] ValueObjects are not created only to hold simple metadata
+- [ ] Attribute names are descriptive
+- [ ] Attribute changes use `GetAttributeChangedSignal()`
+- [ ] Attributes are not polled in loops
+- [ ] Complex runtime state remains in Luau when appropriate
+
+---
+
+
+# 19. Script-Created UI Only
+
+Lily creates its UI through code.
+
+Lily should not depend on manually built UI objects placed in Roblox Studio.
+
+The normal Lily UI flow is:
+
+```text
+script starts
+    ↓
+script creates UI
+    ↓
+script configures UI
+    ↓
+script connects UI events
+    ↓
+script updates UI from state
+    ↓
+script destroys UI during cleanup
+```
+
+### Main rule
+
+> **Lily UI is created by scripts.**
+
+---
+
+## 19.1 Do Not Build Lily UI Manually in Studio
+
+Avoid manually creating Lily interface objects such as:
+
+- `ScreenGui`
+- `SurfaceGui`
+- `Frame`
+- `TextButton`
+- `ImageButton`
+- `TextLabel`
+- `TextBox`
+- layouts
+- scrolling frames
+- selectors
+- controls
+- buttons
+- other Lily interface objects
+
+and then depending on those prebuilt objects at runtime.
+
+### Avoid
+
+```text
+StarterGui
+└── FooGui
+    ├── FooFrame
+    ├── FooButton
+    └── FooLabel
+```
+
+when Lily expects those objects to already exist.
+
+---
+
+## 19.2 Create UI From Code
+
+### Good
+
+```lua
+local fooFrame = interface.Frame(parent, {
+	Name = "FooFrame",
+	Position = UDim2.fromOffset(10, 10),
+	Size = UDim2.fromOffset(300, 200),
+	BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+})
+```
+
+```lua
+local fooButton = interface.TextButton(fooFrame, {
+	Name = "FooButton",
+	Size = UDim2.fromOffset(120, 50),
+	Text = "Foo",
+})
+```
+
+The script owns the interface from creation to destruction.
+
+---
+
+## 19.3 UI Configuration Belongs in Code
+
+Keep important UI properties in the script that creates the UI.
+
+Examples include:
+
+- position
+- size
+- anchor point
+- colors
+- transparency
+- text
+- fonts
+- image IDs
+- layout settings
+- scrolling settings
+- `ZIndex`
+- input behavior
+
+### Why
+
+This makes the UI:
+
+- reproducible
+- easier to review
+- easier to version with Git
+- easier to copy between places
+- easier to rebuild
+- easier to debug
+- less dependent on hidden Studio state
+
+---
+
+## 19.4 UI Events Are Connected by the Creating Script
+
+### Good
+
+```lua
+local fooButton = interface.TextButton(parent, {
+	Name = "FooButton",
+	Text = "Foo",
+})
+
+connect(fooButton.MouseButton1Click, onFooClick)
+```
+
+The same feature that creates the UI should normally connect the UI behavior.
+
+---
+
+## 19.5 UI Should Reflect State
+
+The UI should not become a second source of truth.
+
+State should live in the proper Lily runtime state, and the UI should display that state.
+
+### Good flow
+
+```text
+state changes
+    ↓
+update function runs
+    ↓
+UI reflects the new state
+```
+
+### Good
+
+```lua
+local function updateFooView(fooContext)
+	fooContext.fooLabel.Text = tostring(fooContext.value)
+end
+```
+
+Do not rely on reading UI properties as the main storage for important runtime state.
+
+---
+
+## 19.6 Script-Created UI Must Be Cleanable
+
+If a script creates UI, the script must also be able to remove it.
+
+### Good
+
+```lua
+local function destroyFooView(fooContext)
+	if not fooContext.fooScreen then return end
+
+	fooContext.fooScreen:Destroy()
+	fooContext.fooScreen = nil
+end
+```
+
+Created UI should not remain after:
+
+- a context is destroyed
+- a interface is replaced
+- a feature is disabled
+- setup runs again
+- the owning context is removed
+
+---
+
+## 19.7 Avoid Duplicate UI
+
+Setup should not create another copy of the same UI every time it runs.
+
+Before creating a replacement, Lily should either:
+
+1. reuse the valid existing UI, or
+2. destroy the old UI and create the new one
+
+Do not allow UI to stack.
+
+---
+
+## 19.8 UI Helpers Are Allowed
+
+Lily can use reusable UI helper modules.
+
+For example:
+
+```lua
+local fooButton = interface.TextButton(parent, {
+	Name = "FooButton",
+	Text = "Foo",
+})
+```
+
+This still follows the rule because the UI is being created from code.
+
+The important part is that Lily does not depend on a manually assembled UI hierarchy.
+
+---
+
+## 19.9 Studio Objects Can Still Be UI Targets
+
+A physical object may still act as the target for scripted UI.
+
+For example, a script may create a `SurfaceGui` and assign an existing Part as its `Adornee`.
+
+The UI itself is still created by code.
+
+### Example
+
+```lua
+local fooScreen = interface.SurfaceGui(parent, {
+	Adornee = fooObject,
+	Face = Enum.NormalId.Top,
+})
+```
+
+The target can exist in Studio.  
+The Lily interface is created by the script.
+
+---
+
+## 19.10 UI Review Checklist
+
+- [ ] Lily UI is created from scripts
+- [ ] Lily does not depend on manually built UI hierarchies
+- [ ] UI properties are defined in code
+- [ ] UI events are connected in code
+- [ ] UI reflects runtime state instead of owning important state
+- [ ] created UI has a cleanup path
+- [ ] setup does not stack duplicate UI
+- [ ] reusable UI helper modules are allowed
+- [ ] physical UI targets may exist in Studio, but the interface itself is scripted
+
+---
+
+# 20. Comments
 
 Comments should explain **why**, not repeat **what**.
 
@@ -1634,16 +2206,16 @@ Comments should explain **why**, not repeat **what**.
 ```lua
 -- set enabled to true
 enabled = true
-``````
+```
 
 The code already says that.
 
 ## Better
 
 ```lua
--- Release old held inputs before switching profiles so they cannot stay active.
+-- Release old held inputs before switching contexts so they cannot stay active.
 releaseFoo()
-``````
+```
 
 ### Good comment topics
 
@@ -1659,7 +2231,7 @@ releaseFoo()
 
 ---
 
-# 19. Error Handling
+# 21. Error Handling
 
 Use errors for real programming problems, not normal control flow.
 
@@ -1675,7 +2247,7 @@ function module.setup(fooKey: string): boolean
 
 	return true
 end
-``````
+```
 
 ---
 
@@ -1685,7 +2257,7 @@ Use `assert` when an invariant must be true.
 
 ```lua
 assert(type(fooData) == "table", "Definitions must return a table.")
-``````
+```
 
 ---
 
@@ -1703,17 +2275,17 @@ Do not spam warnings in normal expected flows.
 
 ---
 
-# 20. Performance
+# 22. Performance
 
-Lily is a real-time Roblox stage-lighting system.
+Lily is a Roblox/Luau codebase where the same code may run many times or manage many objects at once.
 
-Small costs can become large when repeated:
+Small costs can become large when work is repeated:
 
 - every frame
-- for many effects
-- across hundreds of fixtures
-- across several profiles
-- across many UI controls
+- across many objects
+- across many active systems
+- across many contexts
+- across many interface elements
 
 ---
 
@@ -1724,8 +2296,8 @@ Avoid repeatedly searching the hierarchy in hot code.
 ### Avoid
 
 ```lua
-local object = workspace.Stage.Foo.Item
-``````
+local object = workspace.Foo.Bar
+```
 
 inside a per-frame loop when the reference can be cached once.
 
@@ -1765,8 +2337,8 @@ The most important areas include:
 - `Heartbeat`
 - `RenderStepped`
 - scheduler updates
-- effect update loops
-- per-fixture patch functions
+- system update loops
+- per-object update functions
 - high-frequency remote handling
 
 ### Quick rule
@@ -1783,7 +2355,7 @@ Prefer the clearest fast solution.
 
 ---
 
-# 21. Luau Local/Register Limit
+# 23. Luau Local/Register Limit
 
 Large Luau modules can hit the local/register limit.
 
@@ -1792,7 +2364,7 @@ A common error looks like:
 ```text
 Out of local registers
 exceeded limit 200
-``````
+```
 
 This can happen when a very large file contains too many top-level locals and local functions.
 
@@ -1811,7 +2383,7 @@ end
 
 local function baz()
 end
-``````
+```
 
 repeated hundreds of times, cold internal helpers can be grouped:
 
@@ -1823,7 +2395,7 @@ end
 
 function internals.bar()
 end
-``````
+```
 
 ---
 
@@ -1839,7 +2411,7 @@ Performance-sensitive helpers may still be better as locals.
 
 ---
 
-# 22. Avoid Boolean Expression Control Flow
+# 24. Avoid Boolean Expression Control Flow
 
 Lily does not use chained `and/or` expressions as control flow.
 
@@ -1847,7 +2419,7 @@ Lily does not use chained `and/or` expressions as control flow.
 
 ```lua
 local value = condition and firstValue or secondValue
-``````
+```
 
 Especially avoid long chains:
 
@@ -1856,7 +2428,7 @@ local result = firstCondition and firstValue
 	or secondCondition and secondValue
 	or thirdCondition and thirdValue
 	or nil
-``````
+```
 
 ---
 
@@ -1876,7 +2448,7 @@ if secondCondition then
 end
 
 return thirdValue
-``````
+```
 
 ### Why
 
@@ -1888,7 +2460,7 @@ The explicit version is easier to debug and safer when values like `false` or `n
 
 ---
 
-# 23. Composition Over Inheritance
+# 25. Composition Over Inheritance
 
 Prefer combining focused systems instead of building deep inheritance trees.
 
@@ -1899,7 +2471,7 @@ Foo
 + FooController
 + BarEngine
 + BazController
-``````
+```
 
 Each part has a clear responsibility.
 
@@ -1919,7 +2491,7 @@ Composition is usually easier to:
 
 ---
 
-# 24. Public State
+# 26. Public State
 
 Public state should be controlled when direct mutation could break rules.
 
@@ -1933,7 +2505,7 @@ end
 function fooController:setValue(value: number)
 	self.value = math.max(value, 0)
 end
-``````
+```
 
 This makes the allowed state change clear.
 
@@ -1945,7 +2517,7 @@ Do not create getters and setters for every private variable automatically.
 
 ---
 
-# 25. Generic Solutions
+# 27. Generic Solutions
 
 Prefer a reusable solution when several features perform the same real operation.
 
@@ -1959,7 +2531,7 @@ local function disconnectConnections(owner)
 
 	table.clear(owner.connections)
 end
-``````
+```
 
 This can work for several feature owners.
 
@@ -1977,7 +2549,7 @@ Two systems can stay separate if their meaning is different.
 
 ---
 
-# 26. Lily Anti-Patterns
+# 28. Lily Anti-Patterns
 
 These patterns should usually be removed during review.
 
@@ -1993,7 +2565,7 @@ if fooContext then
 		updateFoo(foo)
 	end
 end
-``````
+```
 
 ### Prefer
 
@@ -2002,7 +2574,7 @@ if not fooContext then return end
 if not foo then return end
 
 updateFoo(foo)
-``````
+```
 
 ---
 
@@ -2012,7 +2584,7 @@ updateFoo(foo)
 
 ```lua
 local value = condition and foo or bar
-``````
+```
 
 ---
 
@@ -2023,7 +2595,7 @@ local value = condition and foo or bar
 ```lua
 if not fooContext then return end
 if not fooContext.remote then return end
-``````
+```
 
 when the caller already guarantees both.
 
@@ -2037,7 +2609,7 @@ when the caller already guarantees both.
 local ctx
 local obj
 local mgr
-``````
+```
 
 Prefer names that explain the value.
 
@@ -2049,7 +2621,7 @@ Prefer names that explain the value.
 
 ```lua
 updateFoo(foo, true, false, true)
-``````
+```
 
 ---
 
@@ -2061,7 +2633,7 @@ updateFoo(foo, true, false, true)
 local function setTrue(data)
 	data.value = true
 end
-``````
+```
 
 if the helper adds no meaning.
 
@@ -2086,7 +2658,7 @@ while true do
 
 	task.wait()
 end
-``````
+```
 
 ### Prefer
 
@@ -2094,7 +2666,7 @@ end
 valueObject.Changed:Connect(function(value)
 	updateValue(value)
 end)
-``````
+```
 
 The system should react to the change instead of repeatedly checking for it.
 
@@ -2107,24 +2679,24 @@ The system should react to the change instead of repeatedly checking for it.
 ```lua
 for key, value in pairs(data) do
 end
-``````
+```
 
 ```lua
 for index, bar in ipairs(bars) do
 end
-``````
+```
 
 ### Prefer
 
 ```lua
 for key, value in data do
 end
-``````
+```
 
 ```lua
 for index, bar in bars do
 end
-``````
+```
 
 ---
 
@@ -2149,7 +2721,7 @@ alive after destruction.
 
 ```lua
 local data: any
-``````
+```
 
 just to stop type errors.
 
@@ -2161,13 +2733,13 @@ just to stop type errors.
 
 ```lua
 local remote = object :: RemoteEvent
-``````
+```
 
 without a real guarantee.
 
 ---
 
-# 27. Example Lily Function
+# 29. Example Lily Function
 
 ```lua
 --!strict
@@ -2185,7 +2757,7 @@ local function updateFooState(fooContext: Context, fooName: string, enabled: boo
 		updateBaz(baz, enabled)
 	end
 end
-``````
+```
 
 ## Why this matches Lily style
 
@@ -2201,7 +2773,7 @@ end
 
 ---
 
-# 28. Example Lily Module
+# 30. Example Lily Module
 
 ```lua
 --!strict
@@ -2279,11 +2851,11 @@ end
 --————————————————————————————————————————————————————————————————————--
 
 return module
-``````
+```
 
 ---
 
-# 29. Review Checklist
+# 31. Review Checklist
 
 Use this before calling Lily code finished.
 
@@ -2350,6 +2922,7 @@ Use this before calling Lily code finished.
 
 ## State
 
+- [ ] Simple Instance metadata uses Attributes instead of ValueObjects
 - [ ] State has a clear owner
 - [ ] Independent instances do not accidentally share state
 - [ ] Related state stays near related behavior
@@ -2381,7 +2954,11 @@ Use this before calling Lily code finished.
 
 ## Formatting
 
-- [ ] Services are organized consistently
+- [ ] Lily UI is created from scripts
+- [ ] UI setup does not depend on manually built Studio UI
+- [ ] Services are alphabetized
+- [ ] Related top-level declarations are alphabetized inside their section
+- [ ] Dependency order is preserved when alphabetical order is required to be broken
 - [ ] Top-level sections are easy to find
 - [ ] Lily separators are used
 - [ ] Simple expressions stay compact
@@ -2400,7 +2977,7 @@ Use this before calling Lily code finished.
 
 ---
 
-# 30. Main Lily Principle
+# 32. Main Lily Principle
 
 > ## Clear first. Compact second. Clever never.
 
