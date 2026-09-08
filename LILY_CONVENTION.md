@@ -2655,37 +2655,175 @@ Do not add `?` when the architecture guarantees that the argument is always pres
 
 ---
 
-#### 24.11 `any` Is Disallowed by Default
+#### 24.11 `any` and `unknown` Are Prohibited
 
-The `any` type bypasses much of Luau's type safety and should not be used as a convenience.
+Lily Studio does not use `any` or `unknown` as placeholder types.
 
-> **Hard rule:** `any` is disallowed unless the functionality genuinely requires it and a safer representable type is not practical.
-Before using `any`, prefer:
+> **Hard rule:** Lily Studio code must use the actual type required by the owning module, API, data structure, or runtime contract.
 
-- a concrete type
-- an optional type
-- a union
-- a generic
-- a typed table
-- runtime validation followed by narrowing
-- `unknown` when the value is truly unknown
+Do not use `any` or `unknown`:
 
-If `any` is genuinely required, its reason should be immediately apparent from the implementation or documented when the reason is not obvious.
+- for variables
+- for function parameters
+- for return values
+- for callback signatures
+- for table fields
+- for module APIs
+- for remote payloads
+- for temporary values
+- to silence type errors
+- because the correct type has not been investigated yet
+
+When a value comes from another Lily module, inspect that module and type the value from the contract it actually provides.
 
 **Avoid**
 
 ```lua
-local value: any = data.value
+type FooData = {
+	value: unknown,
+}
+```
+
+```lua
+local function updateFoo(value: any): ()
+end
 ```
 
 **Preferred**
 
-```lua
-local value: unknown = data.value
-if type(value) ~= "number" then return end
+If the owning module provides:
 
-local numberValue: number = value
+```lua
+local bindings = {
+	[Enum.KeyCode.One] = {
+		action = "foo",
+		value = 1,
+	},
+}
 ```
+
+represent the real contract:
+
+```lua
+type FooBinding = {
+	action: "foo",
+	value: number,
+}
+```
+
+If several valid shapes exist, use a precise union:
+
+```lua
+type Binding =
+	FooBinding
+	| BarBinding
+	| BazBinding
+```
+
+Before choosing a type, determine:
+
+1. which module creates the value
+2. which fields that module actually provides
+3. which values each field can contain
+4. whether a field is genuinely optional
+5. which runtime boundary may modify or omit the value
+
+Use concrete types, optional types, unions, generics, and strictly typed tables to represent that contract.
+
+Do not broaden a type only because a function is currently difficult to type. Fix the contract or narrow the implementation instead.
+
+> **Rule:** If Lily does not know the type yet, inspect the owner and determine it. `any` and `unknown` are not substitutes for understanding the data contract.
+
+
+
+#### 24.11.1 Derive Types From the Providing Module
+
+When Lily code receives data from another Lily module, the receiving code should inspect the module that creates or returns that data and define the type from the values that module actually provides.
+
+> **Hard rule:** Do not invent broad placeholder fields or generic fallback types for module-provided data. Type the real contract.
+
+For example, if a keybind module only provides:
+
+```lua
+local bindings = {
+	[Enum.KeyCode.One] = {
+		action = "dimmer",
+		mode = "toggle",
+		offValue = 0,
+		onValue = 1,
+	},
+
+	[Enum.KeyCode.Two] = {
+		action = "effect",
+		effectName = "foo",
+		mode = "hold",
+	},
+}
+```
+
+the consumer should define only the supported shapes:
+
+```lua
+type DimmerKeybind = {
+	action: "dimmer",
+	mode: "toggle",
+	offValue: number,
+	onValue: number,
+}
+
+type EffectKeybind = {
+	action: "effect",
+	effectName: string,
+	mode: "hold",
+}
+
+type KeybindData =
+	DimmerKeybind
+	| EffectKeybind
+```
+
+Do not write a broad structure such as:
+
+```lua
+type KeybindData = {
+	action: string?,
+	effectName: string?,
+	mode: string?,
+	value: number?,
+	offValue: number?,
+	onValue: number?,
+	positionIndex: number?,
+	speedMasterLink: number?,
+	zoomValue: number?,
+}
+```
+
+when the providing module does not actually produce all of those fields on one shared shape.
+
+Before defining the receiving type:
+
+1. inspect the module that creates the value
+2. identify every valid returned shape
+3. identify which fields are always present
+4. identify which fields are genuinely optional
+5. identify literal values such as `"effect"`, `"hold"`, or `"toggle"`
+6. represent multiple real shapes with a precise union when necessary
+7. keep the consumer type synchronized with the provider contract
+
+This rule applies to:
+
+- keybind definitions
+- effect definitions
+- configuration modules
+- profile modules
+- controller return values
+- package APIs
+- factory functions
+- module state objects
+- shared data tables
+- any other Lily-owned module contract
+
+> **Rule:** The module that creates the data defines what the data can be. Consumers should type that contract accurately instead of broadening it for convenience.
 
 ---
 
@@ -3206,6 +3344,112 @@ end
 
 return module
 ```
+
+---
+
+
+#### 27.1 Keep Top-Level Local Declarations at the Top
+
+Lily Studio keeps top-level local declarations in the appropriate declaration sections near the top of the file.
+
+> **Hard rule:** Do not introduce new top-level local variables, temporary startup tables, caches, or collections after the file has entered its function or runtime-execution sections.
+
+Top-level locals should normally belong under one of these sections:
+
+1. Roblox services
+2. module table
+3. constants and configuration
+4. state
+5. dependencies
+6. types
+
+After private functions begin, the file should remain focused on behavior rather than introducing new top-level state.
+
+**Avoid**
+
+```lua
+local function watchFoo()
+end
+
+local initialFoos = container:GetChildren()
+local initialBars = {}
+local initialObjects = container:GetDescendants()
+
+for _, object in initialObjects do
+	-- startup work
+end
+```
+
+The declarations appear after function definitions and make the file harder to scan because state and execution are mixed together.
+
+**Preferred**
+
+```lua
+local initialFoos = container:GetChildren()
+
+--————————————————————————————————————————————————————————————————————--
+
+local function watchFoo()
+end
+
+--————————————————————————————————————————————————————————————————————--
+
+for _, foo in initialFoos do
+	watchFoo(foo)
+end
+```
+
+When the temporary data does not need to remain top-level state, prefer removing the temporary table entirely and keeping startup execution direct.
+
+**Preferred**
+
+```lua
+for _, foo in container:GetChildren() do
+	if not foo:IsA("Folder") then continue end
+
+	watchFoo(foo)
+end
+```
+
+Do not create several top-level `initial...` tables only to make one startup pass more indirect.
+
+> **Rule:** Declare top-level state at the top. Keep startup execution at the bottom compact, direct, and free of unnecessary temporary top-level locals.
+
+---
+
+#### 27.2 Do Not Mix Declarations With Startup Execution
+
+Lily files should have a clear transition from declarations to functions to final startup execution.
+
+A typical file should read in this order:
+
+```text
+services
+    ↓
+module
+    ↓
+configuration
+    ↓
+state
+    ↓
+dependencies
+    ↓
+types
+    ↓
+private functions
+    ↓
+public methods
+    ↓
+startup connections / one-time initialization
+    ↓
+return module
+```
+
+Once the file reaches startup execution, do not insert new helper functions or new top-level state below that point.
+
+If startup logic becomes large enough that it needs several temporary tables or several passes, first consider whether the behavior belongs inside an existing focused helper.
+
+> **Rule:** Lily files should not alternate between declarations, functions, new declarations, and execution. Each top-level section should appear once in a predictable order.
 
 ---
 
@@ -4604,7 +4848,8 @@ A strong Lily implementation should normally have:
 - strong Luau typing
 - explicit types on all directly typeable declarations
 - strictly typed tables
-- `any` disallowed unless functionality genuinely requires it
+- `any` and `unknown` are prohibited throughout Lily Studio code
+- module-provided values are typed from the provider's actual contract
 - unions and intersections used only with immediately clear justification
 - **Attributes** for lightweight Instance metadata
 - **Script-created runtime infrastructure**, including networking objects, runtime folders, bindables, and UI
@@ -4615,6 +4860,8 @@ A strong Lily implementation should normally have:
 - optimized runtime behavior with no uncontrolled memory growth or unnecessary **CPU usage**
 - no hierarchy discovery or yielding inside controlled loops
 - predictable top-level organization
+- top-level local declarations remain in the declaration sections near the top of the file
+- startup execution remains compact and does not introduce unnecessary temporary top-level state
 - alphabetical declarations inside logical sections
 - no uncontrolled third-party package dependencies
 - no hidden behavior changes during refactors
