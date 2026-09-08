@@ -1696,6 +1696,45 @@ end```
 
 ---
 
+
+#### 18.2 Wrap Long Guard Conditions Cleanly
+
+Short guard clauses should remain compact when they are easy to read.
+
+**Preferred**
+
+```lua
+if not player then return false end
+```
+
+When one logical condition becomes too long for a clean single line, Lily should wrap the condition across multiple lines instead of forcing the entire expression onto one line.
+
+**Avoid**
+
+```lua
+if not player or not player:IsA("Player") or type(accessType) ~= "string" or accessType == "" then return false end
+```
+
+**Preferred**
+
+```lua
+if not player
+	or not player:IsA("Player")
+	or type(accessType) ~= "string"
+	or accessType == ""
+then
+	return false
+end
+```
+
+Each continuation line should represent one clear part of the condition. Keep the logical operator at the beginning of the continuation line so the relationship between conditions is immediately visible.
+
+Do not break a short condition across several lines only to satisfy a rigid formatting rule.
+
+> **Rule:** Keep short guards on one line. When a guard becomes visually long, wrap each logical condition onto its own continuation line and place `then` and the guard action on clear separate lines.
+
+---
+
 ### 19. No Conditional Nesting
 
 Lily avoids **conditional nesting** because each additional level forces the reader to carry more conditions mentally while following the main path. Flat control flow retains decisions visible, reduces indentation, and creates later changes less likely to introduce hidden branches.
