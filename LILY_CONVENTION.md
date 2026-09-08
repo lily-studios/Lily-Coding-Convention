@@ -765,6 +765,273 @@ Setup should not continuously stack duplicate connections, duplicate UI, duplica
 
 With ownership established, the implementation should remain easy to follow at the function level. Lily favors descriptive names, one clearly defined responsibility, flat control flow, and direct iteration.
 
+#### 13.1 Table Cleanup Is Part of the Lifecycle
+
+Lily Studio uses tables extensively for runtime contexts, mappings, configuration, state, caches, collections, ownership records, and shared data structures, which makes table cleanup especially important. A table that is no longer needed should not continue holding references to objects, connections, callbacks, Instances, or other tables after its owner has been destroyed.
+
+> **Hard rule:** If a Lily-owned table is part of runtime state, its contents must be released when that runtime state is destroyed.
+
+A table can keep other objects alive even after those objects are no longer visible or useful. For that reason, cleaning up a Lily system means more than destroying Instances or disconnecting events; the tables that owned those references must also stop retaining them.
+
+---
+
+#### 13.2 Clear Owned Runtime Tables
+
+When a table is fully owned by one runtime context and is no longer needed, clear it during cleanup.
+
+### Preferred
+
+```lua
+local function destroyFoo(fooContext)
+	table.clear(fooContext.connections)
+	table.clear(fooContext.data)
+	table.clear(fooContext.objects)
+end
+```
+
+If the table itself is stored by another owner, remove that reference as well.
+
+```lua
+fooContexts[fooKey] = nil
+```
+
+This allows Luau's garbage collector to reclaim the table and anything that is no longer referenced elsewhere.
+
+---
+
+#### 13.3 Remove Entries as Soon as They Become Invalid
+
+Lily should not wait until a large shutdown operation to remove obviously stale entries from long-lived tables.
+
+### Preferred
+
+```lua
+fooContexts[fooKey] = nil
+```
+
+as soon as that context is permanently destroyed.
+
+The same rule applies to caches, registries, mappings, lookup tables, and other long-lived collections.
+
+> **Rule:** Stale table entries should be removed at the moment they stop being valid.
+
+---
+
+#### 13.4 Nested Tables Must Be Cleaned Intentionally
+
+Clearing only the outer table is not always enough when nested tables have their own lifecycle, active connections, tasks, or references.
+
+For example, if each entry owns connections, those connections must be disconnected before the table is cleared.
+
+### Preferred
+
+```lua
+for _, bar in fooContext.bars do
+	for _, connection in bar.connections do
+		connection:Disconnect()
+	end
+
+	table.clear(bar.connections)
+end
+
+table.clear(fooContext.bars)
+```
+
+The cleanup order should follow ownership: release the resources owned by each nested entry first, then remove the entries themselves.
+
+---
+
+#### 13.5 Disconnect Before Clearing Connection Tables
+
+A connection table should never simply be cleared while the connections are still active.
+
+### Avoid
+
+```lua
+table.clear(fooContext.connections)
+```
+
+when the stored `RBXScriptConnection` objects are still connected.
+
+### Preferred
+
+```lua
+for _, connection in fooContext.connections do
+	connection:Disconnect()
+end
+
+table.clear(fooContext.connections)
+```
+
+Removing the Lua reference does not disconnect the Roblox connection, so both parts of the lifecycle must be handled.
+
+---
+
+#### 13.6 Destroy Owned Instances Before Releasing Their References
+
+If a table owns Instances that should no longer exist, destroy the Instances before clearing the table that references them.
+
+### Preferred
+
+```lua
+for _, object in fooContext.objects do
+	object:Destroy()
+end
+
+table.clear(fooContext.objects)
+```
+
+If another system owns the Instance, Lily should only remove its own reference and must not destroy an object it does not own.
+
+> **Rule:** Cleanup follows ownership. Destroy what the table owns, release what it only references.
+
+---
+
+#### 13.7 Stop Background Work Before Clearing Its State
+
+A table should not be cleared while a background task, callback, or recurring runtime path can still access it.
+
+The normal cleanup order should be controlled:
+
+```text
+stop recurring work
+    ↓
+disconnect events
+    ↓
+destroy owned Instances
+    ↓
+clear nested runtime tables
+    ↓
+remove owner from registries
+    ↓
+release final references
+```
+
+This prevents callbacks from reading partially destroyed state or recreating references during cleanup.
+
+---
+
+#### 13.8 Do Not Keep Destroyed Owners in Registries
+
+Long-lived registries are especially important because one stale entry can keep an entire runtime tree alive.
+
+### Avoid
+
+```lua
+fooContexts[fooKey] = fooContext
+```
+
+remaining after `fooContext` has already been destroyed.
+
+### Preferred
+
+```lua
+fooContexts[fooKey] = nil
+```
+
+during the same controlled destruction path.
+
+A Lily registry should contain only currently valid owners.
+
+---
+
+#### 13.9 Caches Need an Invalidation and Cleanup Rule
+
+A cache should never grow indefinitely simply because values were useful once.
+
+Every Lily cache should have a clear answer for:
+
+- who owns the cache
+- what creates an entry
+- when an entry becomes invalid
+- who removes the entry
+- whether the cache has a maximum lifetime
+- whether the cache is cleared when its owner is destroyed
+
+If a cache has no invalidation or cleanup rule, it is not fully controlled.
+
+---
+
+#### 13.10 Avoid Retaining Large Objects Through Closures
+
+Callbacks and closures can keep tables alive when they capture a large owner or runtime context.
+
+When a connection or task is destroyed, the callback that captured the state should no longer have a path that keeps the owner alive.
+
+This is another reason Lily requires controlled connection cleanup and controlled background-task cleanup.
+
+> **Rule:** A destroyed owner should not remain reachable only because an old callback still references it.
+
+---
+
+#### 13.11 Reuse Tables Only When Ownership Is Clear
+
+Reusing a table can reduce allocation in hot paths, but reuse is only safe when the table has one clear owner and its previous contents are completely reset before reuse.
+
+### Preferred
+
+```lua
+table.clear(fooData)
+```
+
+before the same owned table is repopulated.
+
+Do not reuse a table that may still be referenced by another system, callback, or consumer expecting the previous contents.
+
+Optimization never overrides ownership.
+
+---
+
+#### 13.12 Do Not Replace Cleanup With Garbage Collection Assumptions
+
+Luau's garbage collector can reclaim unreachable tables, but Lily should not depend on garbage collection to solve ownership mistakes.
+
+The code must first make unused state unreachable by:
+
+- disconnecting active connections
+- stopping tasks
+- destroying owned Instances
+- removing registry entries
+- clearing owned tables
+- removing final references
+
+The garbage collector can only reclaim data after Lily has correctly released its references.
+
+> **Hard rule:** Garbage collection is the final memory-recovery mechanism, not a substitute for cleanup.
+
+---
+
+#### 13.13 Table Cleanup Should Be Easy to Explain
+
+Because Lily uses many tables, the cleanup path should be just as understandable as the setup path.
+
+A developer should be able to explain:
+
+> "This owner stops its recurring work, disconnects its connections, destroys its owned objects, clears its tables, removes itself from the registry, and then releases the final reference."
+
+If cleanup cannot be explained clearly, the ownership model is probably too complicated and should be simplified.
+
+---
+
+#### 13.14 Cleanup Should Be Symmetrical With Setup
+
+Every major setup action should have a corresponding cleanup action.
+
+| Setup | Cleanup |
+| --- | --- |
+| create connection | disconnect connection |
+| create Instance | destroy owned Instance |
+| insert registry entry | remove registry entry |
+| create runtime table | clear/release runtime table |
+| start background work | stop background work |
+| create UI | destroy UI |
+| cache owned data | invalidate/clear cache |
+
+This symmetry makes memory behavior easier to reason about and reduces the chance that a resource is forgotten.
+
+> **Final cleanup rule:** Lily cleanup is not optional housekeeping. It is part of the runtime design, especially because Lily relies heavily on tables to own and connect system state.
+
+
 ### 14. Naming
 
 Strong naming allows Lily code to explain much of itself before comments are needed. A developer should normally be able to understand the role of a value, function, callback, or owner from its name alone, especially when reading it at the call site.
@@ -999,7 +1266,7 @@ Lily Studio favors **tables for related data, configuration, mappings, handlers,
 
 A table should be used when several values belong to the same concept, when several names map to related behavior, or when a system needs one clear structure that another function can read and process.
 
-> **Main rule:** When several related values or behaviors belong together, Lily should usually represent them with a table instead of spreading them across unrelated variables or conditional branches.
+> **Main rule:** When several related values or behaviors clearly benefit from being grouped, Lily should usually represent them with a table. Simple standalone values may remain separate when that is clearer.
 
 #### 17.1 Group Related Data Together
 
@@ -1015,7 +1282,7 @@ local fooData = {
 }
 ```
 
-### Avoid
+### Also Allowed
 
 ```lua
 local fooName = "Foo"
@@ -1023,7 +1290,9 @@ local fooEnabled = true
 local fooValue = 1
 ```
 
-The separate variables are not always wrong, but a table is usually better when those values belong to one logical object and are expected to move through the system together.
+Separate variables are completely valid Lily code when each value is simple, local to the current scope, and does not need to travel through the system as one grouped object. A table should be introduced only when grouping the values gives the code clearer ownership, a reusable structure, a shared type, or a cleaner API.
+
+> **Rule:** Lily likes table-driven design, but Lily does not force unrelated or simple local values into tables.
 
 ---
 
@@ -1118,7 +1387,7 @@ when only one independent value exists.
 
 Do not wrap every single value inside a table when the table adds no structure or meaning.
 
-> **Rule:** Lily uses tables heavily, but every table should represent a real grouping, mapping, collection, configuration, or owner.
+> **Rule:** Lily uses tables heavily, but tables are not mandatory. Every table should represent a real grouping, mapping, collection, configuration, or owner, while simple standalone values may remain normal local variables.
 
 ---
 
@@ -2944,6 +3213,271 @@ It must not:
 
 > **Final rule:** Lily has no uncontrolled background loops. Continuous work exists only when the feature requires it, and every loop has explicit ownership, purpose, timing, and cleanup.
 
+#### 32.17 Optimization Is Part of the Design
+
+Lily Studio does not treat optimization as something that is added only after a system begins to lag. Performance should be considered while the architecture is being designed so the normal implementation already avoids unnecessary work, excessive allocation, uncontrolled background activity, and resources that remain alive after their owner is gone.
+
+> **Main rule:** Lily code should be designed to remain efficient, stable, and predictable as the amount of work increases.
+
+Optimization should focus on reducing work that is repeated frequently, removing unnecessary allocations, preventing duplicate runtime behavior, and making sure every created resource has a controlled lifecycle.
+
+---
+
+#### 32.18 Memory Leaks Are Not Acceptable
+
+Lily systems must not leave behind references, connections, tasks, Instances, tables, callbacks, or runtime contexts after the system that owns them has been destroyed.
+
+Common causes of memory leaks include:
+
+- `RBXScriptConnection` objects that are never disconnected
+- tables that keep references to destroyed objects
+- background tasks that continue after their owner is gone
+- closures that keep large runtime objects alive
+- duplicate runtime contexts
+- UI that is recreated without destroying the previous UI
+- cached objects that are never removed
+- events that retain callbacks indefinitely
+- objects that are removed from the hierarchy but still referenced by Luau state
+
+A cleanup path should release every resource the owner created.
+
+### Preferred
+
+```lua
+local function destroyFoo(fooContext)
+	for _, connection in fooContext.connections do
+		connection:Disconnect()
+	end
+
+	table.clear(fooContext.connections)
+	table.clear(fooContext.data)
+
+	if fooContext.object then
+		fooContext.object:Destroy()
+		fooContext.object = nil
+	end
+end
+```
+
+The exact cleanup depends on the system, but the ownership rule remains the same.
+
+> **Hard rule:** Lily should not leave memory behind after an owner is destroyed.
+
+---
+
+#### 32.19 Avoid High CPU Usage
+
+Lily code should not perform work more often than the feature requires.
+
+High CPU usage is often caused by:
+
+- unnecessary frame updates
+- polling loops
+- duplicate event connections
+- repeated hierarchy searches
+- repeated table construction in hot paths
+- repeated `require()` calls
+- processing unchanged state
+- updating every object when only one object changed
+- recalculating values that could be cached
+- running the same operation from several systems at once
+
+The preferred Lily approach is to perform work only when there is a reason to perform it.
+
+### Preferred flow
+
+```text
+state changes
+    ↓
+affected system is notified
+    ↓
+only required work runs
+    ↓
+cached state is updated
+```
+
+### Avoid
+
+```text
+background loop
+    ↓
+check everything
+    ↓
+nothing changed
+    ↓
+repeat forever
+```
+
+> **Rule:** CPU time should be spent on actual work, not repeated checking.
+
+---
+
+#### 32.20 Avoid Unnecessary Allocation
+
+Frequently executed code should avoid creating temporary tables, closures, Instances, arrays, or other short-lived objects unless the operation genuinely requires them.
+
+### Avoid in a hot path
+
+```lua
+local function updateFoo()
+	local data = {
+		value = currentValue,
+	}
+
+	applyFoo(data)
+end
+```
+
+when the table can be reused or the value can be passed directly.
+
+Every allocation is small by itself, but allocations repeated every frame or across large collections create more garbage for Luau to collect.
+
+> **Rule:** Hot code should reuse stable data where practical instead of continuously creating temporary objects.
+
+---
+
+#### 32.21 Cache Expensive or Repeated Results
+
+If a result is stable and used repeatedly, Lily should normally calculate or resolve it once and store it with the system that owns it.
+
+Useful values to cache may include:
+
+- resolved Instance references
+- parsed configuration
+- calculated constants
+- lookup tables
+- frequently used mappings
+- reusable state
+- compiled runtime data
+
+Do not cache values whose correctness depends on changing data unless the cache has a clear invalidation path.
+
+> **Rule:** Cache repeated work only when the cached value has clear ownership and a clear rule for becoming invalid.
+
+---
+
+#### 32.22 Avoid Duplicate Work
+
+Lily should not allow several systems to perform the same expensive operation independently when the result can be calculated once and shared through a controlled owner.
+
+Duplicate work may include:
+
+- several loops reading the same state
+- several callbacks rebuilding the same data
+- several systems searching the same hierarchy
+- several modules calculating the same derived value
+- multiple network sends representing the same state change
+
+When shared work is appropriate, one system should own the calculation and expose the result through a clear API or state update.
+
+---
+
+#### 32.23 Update Only What Changed
+
+Lily should prefer targeted updates instead of rebuilding or recalculating an entire system when only one part changed.
+
+### Preferred concept
+
+```lua
+local function setFooValue(fooContext, value)
+	if fooContext.value == value then return end
+
+	fooContext.value = value
+	updateFoo(fooContext)
+end
+```
+
+The early return avoids unnecessary work when the requested state already matches the current state.
+
+This pattern is especially important for:
+
+- UI updates
+- network replication
+- large collections
+- expensive calculations
+- runtime state synchronization
+
+> **Rule:** If nothing changed, Lily should normally do nothing.
+
+---
+
+#### 32.24 Performance Must Remain Predictable Under Scale
+
+A system that works well with one object but becomes disproportionately expensive with many objects should be reviewed before it becomes a production problem.
+
+When writing code that may process many values or objects, consider:
+
+- how often the function runs
+- how many entries it processes
+- whether the work grows linearly or worse
+- whether temporary memory grows over time
+- whether cleanup removes old state
+- whether events can become duplicated
+- whether repeated work can be shared or cached
+- whether unchanged objects can be skipped
+
+The goal is not to optimize imaginary problems. The goal is to avoid architecture that obviously becomes expensive when the same operation is repeated at scale.
+
+---
+
+#### 32.25 Performance Optimizations Must Preserve Correctness
+
+Optimization must never make behavior unpredictable, unsafe, or difficult to maintain.
+
+Do not remove required validation, lifecycle handling, ownership, or synchronization only to save a small amount of CPU time.
+
+A good optimization should normally do one or more of the following:
+
+- reduce repeated work
+- remove unnecessary allocation
+- reduce hierarchy access
+- reduce duplicate callbacks
+- reuse stable references
+- skip unchanged state
+- improve cleanup
+- reduce unnecessary networking
+- simplify a hot path
+
+while preserving the same intended behavior.
+
+> **Rule:** Lily optimizes waste, not correctness.
+
+---
+
+#### 32.26 Every Resource Has a Lifetime
+
+Memory and CPU ownership should be treated as part of the system lifecycle.
+
+A Lily developer should be able to explain:
+
+- what starts the work
+- what keeps the work alive
+- what data the work owns
+- what resources it allocates
+- what event or function stops it
+- what is removed during cleanup
+- whether anything can continue after destruction
+
+If those answers are unclear, the lifecycle is not controlled enough.
+
+---
+
+#### 32.27 Performance Problems Should Be Prevented, Not Hidden
+
+Do not solve high CPU or memory usage by hiding symptoms while leaving the underlying repeated work or ownership problem in place.
+
+Examples of weak fixes include:
+
+- adding longer waits to an unnecessary polling loop
+- suppressing warnings caused by duplicate initialization
+- reducing update frequency when the update should be event-driven
+- clearing one table while another reference still keeps the same objects alive
+- adding more checks around a system that should have one controlled owner
+
+Lily Studio should correct the source of the waste whenever possible.
+
+> **Final performance rule:** Lily code should use only the CPU, memory, networking, and runtime work that the feature actually requires, and every allocated resource must have an intentional owner and cleanup path.
+
 
 ### 33. Luau Local and Register Limits
 
@@ -3244,7 +3778,9 @@ A strong Lily implementation should normally have:
 - script-created runtime infrastructure, including networking objects, runtime folders, bindables, and UI
 - Lily-owned packages only
 - clean lifecycle ownership
+- aggressive cleanup of owned tables, stale references, caches, and registries
 - no unnecessary background loops, and every required loop has explicit ownership and cleanup
+- optimized runtime behavior with no uncontrolled memory growth or unnecessary CPU usage
 - no hierarchy discovery or yielding inside controlled loops
 - predictable top-level organization
 - alphabetical declarations inside logical sections
