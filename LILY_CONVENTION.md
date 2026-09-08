@@ -1,3 +1,4 @@
+````
 # Lily Studio Coding Convention
 
 > **Official coding standard for Lily Studio Roblox and Luau development.**
@@ -103,6 +104,7 @@ Lily code should normally be:
 
 - **clear**, because the meaning should be obvious without extra explanation
 - **compact**, because unnecessary lines and repeated logic make files more difficult to maintain safely
+- **block-organized**, because related validation, resolution, state changes, and output should remain visually grouped instead of being scattered across unnecessary helpers
 - **type-safe**, because mistakes should be caught before runtime whenever possible
 - **event-driven**, because code should react when something changes instead of repeatedly checking for change
 - **modular**, because features should be separated into focused reusable modules
@@ -382,7 +384,7 @@ A module-first architecture gives Lily Studio a clearer dependency graph and mak
 
 ---
 
-#### 5.1 Prefer Folder-Oriented Architecture
+#### 5.6 Prefer Folder-Oriented Architecture
 
 Lily Studio uses folders extensively to keep source organization explicit, scalable, and easy to navigate. Related modules, systems, features, packages, configuration, and runtime responsibilities should normally be grouped into clearly named folders instead of accumulating in large flat directories.
 
@@ -427,7 +429,7 @@ The exact hierarchy depends on the system, but the structure should communicate 
 
 ---
 
-#### 5.2 Prefer Multiple Focused Folders Over One Large Flat Directory
+#### 5.7 Prefer Multiple Focused Folders Over One Large Flat Directory
 
 When a directory begins containing unrelated modules or too many responsibilities, Lily should separate those responsibilities into focused folders.
 
@@ -468,7 +470,7 @@ The second structure keeps related implementation physically grouped and reduces
 
 ---
 
-#### 5.3 Folder Names Must Be Descriptive
+#### 5.8 Folder Names Must Be Descriptive
 
 Folder names follow the same naming philosophy as code identifiers: they should communicate their responsibility without unexplained abbreviations.
 
@@ -500,7 +502,7 @@ util
 
 ---
 
-#### 5.4 Folders Should Reflect Ownership and Dependency Boundaries
+#### 5.9 Folders Should Reflect Ownership and Dependency Boundaries
 
 Folder structure should reinforce the architecture rather than merely divide files visually.
 
@@ -518,7 +520,7 @@ This reduces accidental cross-system dependencies and makes ownership easier to 
 
 ---
 
-#### 5.5 Do Not Create Meaningless Folder Depth
+#### 5.10 Do Not Create Meaningless Folder Depth
 
 Lily prefers substantial folder organization, but every folder must have a purpose.
 
@@ -542,7 +544,7 @@ Excessive depth increases navigation cost without improving ownership or clarity
 
 ---
 
-#### 5.6 Keep Folder Organization Predictable Across Similar Systems
+#### 5.11 Keep Folder Organization Predictable Across Similar Systems
 
 Systems that serve similar architectural roles should normally use similar folder structures.
 
@@ -552,7 +554,7 @@ Consistency allows developers to navigate unfamiliar Lily systems by recognizing
 
 ---
 
-#### 5.7 Source Folders and Runtime Folders Follow Different Ownership Rules
+#### 5.12 Source Folders and Runtime Folders Follow Different Ownership Rules
 
 Folders used to organize source code may be authored directly as part of the project structure.
 
@@ -562,7 +564,7 @@ Folders that exist because a Lily system requires them at runtime follow the **S
 
 ---
 
-#### 5.8 Folder Structure Is Part of the Architecture
+#### 5.13 Folder Structure Is Part of the Architecture
 
 Folder layout should be considered during system design, not only after implementation becomes difficult to navigate.
 
@@ -1401,7 +1403,7 @@ A single function should not simultaneously handle validation, UI creation, netw
 
 #### 15.1 Create Helpers Only When They Add Meaning
 
-A helper should reduce repeated logic, remove nesting, isolate a responsibility, or make the main flow easier to read.
+A helper should reduce repeated logic, remove meaningful nesting, isolate a real responsibility, or make the main flow easier to read. Lily prefers compact block-based code and does not create helpers merely to relocate a few obvious lines.
 
 ##### Weak helper
 
@@ -1426,6 +1428,151 @@ end
 ```
 
 This helper represents a real **lifecycle** operation and can be reused safely.
+
+---
+
+
+#### 15.2 Prefer Block-Based Function Organization
+
+Lily Studio prefers code that is organized into **clear, compact execution blocks**. A function should read as a sequence of visible operations instead of being fragmented across excessive helpers, repetitive validation functions, or unnecessary type scaffolding.
+
+> [!IMPORTANT]
+> **Main rule:** **Prefer organized blocks of related logic over excessive helper extraction. A helper should exist because it represents a real operation, not merely because several lines can be moved somewhere else.**
+
+A strong Lily function often reads in blocks such as:
+
+```text
+validate
+    ↓
+resolve
+    ↓
+prepare
+    ↓
+apply
+    ↓
+replicate
+    ↓
+return
+```
+
+Each block should have one understandable purpose and should remain visually separated from unrelated work.
+
+### **Preferred**
+
+```lua
+local function updateFoo(fooContext, arguments)
+	if type(arguments) ~= "table" then return false end
+
+	local fooName = arguments.fooName
+	local enabled = arguments.enabled
+
+	if type(fooName) ~= "string" then return false end
+	if type(enabled) ~= "boolean" then return false end
+
+	local fooData = fooContext.foos[fooName]
+	if not fooData then return false end
+
+	fooData.enabled = enabled
+	updateFooView(fooData)
+
+	return true
+end
+```
+
+The function remains compact, while its validation, resolution, mutation, and return behavior remain visually distinct.
+
+---
+
+#### 15.3 Do Not Over-Extract Compact Logic
+
+Lily does not split a straightforward operation into many small helpers only to reduce the number of lines in one function.
+
+### **Avoid**
+
+```lua
+local function getFooName(arguments)
+	return arguments.fooName
+end
+
+local function getFooEnabled(arguments)
+	return arguments.enabled
+end
+
+local function validateFooName(fooName)
+	return type(fooName) == "string"
+end
+```
+
+when those helpers exist only to support one small local operation.
+
+### **Preferred**
+
+```lua
+local fooName = arguments.fooName
+local enabled = arguments.enabled
+
+if type(fooName) ~= "string" then return false end
+if type(enabled) ~= "boolean" then return false end
+```
+
+> **Rule:** **Compact logic should remain local when keeping it together makes the execution path easier to read.**
+
+---
+
+#### 15.4 Prefer Table-Driven Validation When Several Entries Share the Same Pattern
+
+When several values, handlers, remotes, modes, or configuration entries follow the same validation pattern, Lily should prefer a compact table-driven block instead of manually validating every entry through a large repetitive function.
+
+### **Preferred**
+
+```lua
+local requiredNames = {
+	"bar",
+	"baz",
+	"foo",
+}
+
+local resolved = {}
+
+for _, name in requiredNames do
+	local object = container:FindFirstChild(name)
+	if not object then return nil end
+
+	resolved[name] = object
+end
+
+return resolved
+```
+
+This is preferred over writing a separate local variable, guard, warning, and assignment block for every entry when the validation behavior is identical.
+
+A table-driven validation block is especially appropriate when:
+
+- every entry follows the same validation rule
+- each key maps directly to one required object or handler
+- additional entries may be added later
+- a long repeated validation function would add no architectural meaning
+- the resulting table becomes the controlled owner of the resolved values
+
+> **Rule:** **When validation is uniform, describe the requirements as data and process them through one clear block.**
+
+---
+
+#### 15.5 Keep Helpers Focused and Substantial
+
+A Lily helper should normally represent a meaningful operation such as:
+
+- resolving a dependency group
+- disconnecting owned connections
+- validating one reusable data structure
+- applying one state transition
+- building one runtime object
+- transforming one reusable value
+- performing one lifecycle operation
+
+Do not create helpers whose only purpose is to move two or three obvious lines out of an otherwise clear function.
+
+> **Final block rule:** **Lily favors block-based code: related logic stays together, blocks are visually organized, helpers represent real operations, and tables replace repetitive validation when the behavior is uniform.**
 
 ---
 
@@ -1784,7 +1931,7 @@ The helper should still have one clearly defined responsibility and should not e
 
 ---
 
-#### 19.1 Minimize Nested Executable Code
+#### 19.2 Minimize Nested Executable Code
 
 Lily Studio strongly prefers flat executable code. Nesting should be minimized because each additional indentation level increases cognitive load, obscures execution paths, complicates cleanup, and makes ownership more difficult to reason about. Some nesting is unavoidable, so the goal is not absolute elimination; the goal is to keep every execution path as shallow and explicit as practical.
 
@@ -1844,7 +1991,7 @@ The preferred structure separates responsibilities and keeps the main execution 
 
 ---
 
-#### 19.2 Extract Nested Responsibilities Into Focused Helpers
+#### 19.3 Extract Nested Responsibilities Into Focused Helpers
 
 When a block begins requiring another layer of executable nesting, Lily should first consider moving that responsibility into a focused helper.
 
@@ -1884,7 +2031,7 @@ The purpose of extraction is not to create excessive numbers of helpers. It is t
 
 ---
 
-#### 19.3 Avoid Callback Pyramids
+#### 19.4 Avoid Callback Pyramids
 
 Nested callbacks make lifecycle ownership, error handling, and cleanup difficult to follow.
 
@@ -1926,7 +2073,7 @@ end
 
 ---
 
-#### 19.4 Avoid Nested Loops Whenever Responsibilities Can Be Separated
+#### 19.5 Avoid Nested Loops Whenever Responsibilities Can Be Separated
 
 Nested loops are acceptable when the data relationship genuinely requires them and flattening would make the implementation less correct, less clear, or unnecessarily complex.
 
@@ -1944,7 +2091,7 @@ Before writing a nested loop, consider whether the operation should instead use:
 
 ---
 
-#### 19.5 Indentation Depth Is a Design Signal
+#### 19.6 Indentation Depth Is a Design Signal
 
 Increasing indentation should be treated as a design signal that responsibilities may be accumulating in one place.
 
@@ -2013,7 +2160,7 @@ If the data model is naturally `foo -> bars`, this two-level iteration may be cl
 
 ---
 
-#### 19.6 Structural Nesting Is Different From Executable Nesting
+#### 19.8 Structural Nesting Is Different From Executable Nesting
 
 Some nesting is inherent to structured data and is not prohibited by this rule.
 
@@ -2254,7 +2401,7 @@ Strict mode helps catch invalid property access, incorrect arguments, missing fi
 
 ---
 
-#### 24.2 Type Function Parameters and Returns
+#### 24.3 Type Function Parameters and Returns
 
 ##### **Preferred**
 
@@ -2274,7 +2421,121 @@ Important public APIs should not rely on the reader guessing what type is expect
 
 ---
 
-#### 24.3 Use Named Types for Repeated Structures
+
+#### 24.2 Strict Type Declaration
+
+Lily Studio requires explicit type declarations throughout production Luau code.
+
+> [!IMPORTANT]
+> **Hard rule:** **All explicitly declared variables, function parameters, and function return values must have their types specified.**
+
+### **Preferred**
+
+```lua
+local fooName: string = "Foo"
+local fooEnabled: boolean = true
+local fooValue: number = 1
+
+local function updateFoo(fooValue: number): ()
+end
+```
+
+### **Avoid**
+
+```lua
+local fooName = "Foo"
+local fooEnabled = true
+local fooValue = 1
+
+local function updateFoo(fooValue)
+end
+```
+
+The purpose of this rule is to make the expected type visible directly in the source instead of requiring another developer to rely on inference when reading the file.
+
+The primary exception is a local variable that exists only as a direct reference to an `Instance` already present in the Explorer hierarchy for the purpose of resolving or indexing its children.
+
+### **Allowed Explorer Reference**
+
+```lua
+local source = replicatedStorage:WaitForChild("source")
+local library = source:WaitForChild("library")
+```
+
+These hierarchy references may remain inferred when adding an explicit `Instance` type would reduce useful child-indexing information or create unnecessary type friction.
+
+This exception should remain narrow. Once a value becomes normal runtime state, a reusable API value, a table field, or a function argument, it should follow the explicit typing standard.
+
+Some Luau syntax does not permit direct annotations on every introduced variable, such as generalized iteration variables. In those cases, the source collection must be typed so the iterator variables are inferred from a known type.
+
+### **Preferred**
+
+```lua
+local fooNames: { string } = {
+	"Bar",
+	"Baz",
+	"Foo",
+}
+
+for _, fooName in fooNames do
+	print(fooName)
+end
+```
+
+> **Rule:** **If Luau allows the declaration to be typed directly, Lily types it directly. If the syntax does not allow direct annotation, the value must originate from a typed source.**
+
+---
+
+#### 24.4 All Tables Must Be Strictly Typed
+
+Every Lily table should have an explicit and predictable type.
+
+> [!IMPORTANT]
+> **Hard rule:** **All tables must be strictly typed.**
+
+This includes:
+
+- configuration tables
+- runtime contexts
+- lookup tables
+- mappings
+- arrays
+- dictionaries
+- caches
+- registries
+- state tables
+- handler tables
+- payload structures created inside Lily code
+- reusable data objects
+
+### **Preferred**
+
+```lua
+type FooData = {
+	enabled: boolean,
+	name: string,
+	value: number,
+}
+
+local fooData: FooData = {
+	enabled = true,
+	name = "Foo",
+	value = 1,
+}
+```
+
+For lightweight collections, inline table types are acceptable:
+
+```lua
+local fooNames: { string } = {}
+local fooByName: { [string]: FooData } = {}
+```
+
+When a table shape is reused or represents an architectural concept, prefer a named type instead of repeating an inline structure.
+
+---
+
+#### 24.5 Use Named Types for Repeated Structures
 
 ##### **Preferred**
 
@@ -2298,13 +2559,13 @@ Named types improve autocomplete and make large functions easier to read.
 
 ---
 
-#### 24.4 Export Types Only When Other Modules Need Them
+#### 24.6 Export Types Only When Other Modules Need Them
 
 Use `export type` for types that are part of a module's public API. Internal implementation types should remain local.
 
 ---
 
-#### 24.5 Type Collections
+#### 24.7 Type Collections
 
 ##### **Preferred**
 
@@ -2318,7 +2579,7 @@ Typed collections prevent accidental insertion of incompatible values.
 
 ---
 
-#### 24.6 Use Optional Types Intentionally
+#### 24.8 Use Optional Types Intentionally
 
 ```lua
 local activeFooKey: string?
@@ -2333,7 +2594,7 @@ Do not make every value optional only to make the type checker stop reporting er
 
 ---
 
-#### 24.7 Narrow Types With **guard clauses**
+#### 24.9 Narrow Types With **Guard Clauses**
 
 ##### **Preferred**
 
@@ -2350,21 +2611,105 @@ end
 
 ---
 
-#### 24.8 Avoid `any`
 
-Do not use `any` only to hide a type error.
+#### 24.10 Optional Parameters Should Be Narrowed With Guards
 
-##### **Avoid**
+When a function parameter is intentionally optional, Lily should express that directly in the function signature and immediately narrow the value with a guard before using members that require the concrete type.
+
+### **Preferred**
+
+```lua
+local function damageCharacter(character: Instance?)
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then return end
+
+	humanoid:TakeDamage(10)
+end
+```
+
+The `Instance?` annotation communicates that `nil` is a valid input possibility, while the guard establishes that `character` is an `Instance` for the remainder of the function.
+
+The same pattern applies to other optional parameters:
+
+```lua
+local function useRemote(remote: RemoteEvent?)
+	if not remote then return end
+
+	remote:FireAllClients()
+end
+```
+
+Do not remove the optional marker only to avoid writing the guard when the function can genuinely receive `nil`.
+
+Do not add `?` when the architecture guarantees that the argument is always present.
+
+> **Rule:** **If a parameter may legitimately be absent, type it as optional and narrow it immediately with a guard. If the architecture guarantees the value, use the concrete type and do not add a redundant nil guard.**
+
+---
+
+#### 24.11 `any` Is Disallowed by Default
+
+The `any` type bypasses much of Luau's type safety and should not be used as a convenience.
+
+> [!IMPORTANT]
+> **Hard rule:** **`any` is disallowed unless the functionality genuinely requires it and a safer representable type is not practical.**
+
+Before using `any`, prefer:
+
+- a concrete type
+- an optional type
+- a union
+- a generic
+- a typed table
+- runtime validation followed by narrowing
+- `unknown` when the value is truly unknown
+
+If `any` is genuinely required, its reason should be immediately apparent from the implementation or documented when the reason is not obvious.
+
+### **Avoid**
 
 ```lua
 local value: any = data.value
 ```
 
-Prefer a known type, or validate an unknown value before use.
+### **Preferred**
+
+```lua
+local value: unknown = data.value
+if type(value) ~= "number" then return end
+
+local numberValue: number = value
+```
 
 ---
 
-#### 24.9 Avoid Unsafe Casts
+#### 24.12 Use Union and Intersection Types Sparingly
+
+Union (`|`) and intersection (`&`) types are allowed when they accurately represent the real contract of the code.
+
+They should not be introduced merely to satisfy the type checker or to compress several unrelated concepts into one declaration.
+
+### **Allowed**
+
+```lua
+type FooMode = "On" | "Off"
+```
+
+```lua
+type FooObject = BaseFoo & {
+	enabled: boolean,
+}
+```
+
+The reason for the union or intersection should be immediately understandable from the type name, surrounding API, or implementation.
+
+> **Rule:** **Use unions and intersections only when the underlying runtime contract genuinely requires them and their purpose is obvious at the point of use.**
+
+---
+
+#### 24.13 Avoid Unsafe Casts
 
 ##### **Avoid**
 
@@ -2386,7 +2731,7 @@ Casts should be used only when the architecture genuinely guarantees the type an
 
 ---
 
-#### 24.10 Runtime Validation Still Matters
+#### 24.14 Runtime Validation Still Matters
 
 Static typing cannot guarantee the shape of data that arrives from runtime boundaries such as RemoteEvents, **Attributes**, user input, JSON, or dynamically discovered Instances.
 
@@ -4260,6 +4605,7 @@ Lily Studio code should feel consistent regardless of which developer originally
 A strong Lily implementation should normally have:
 
 - clear names
+- block-based organization with compact related logic
 - descriptive names written in full
 - flat control flow
 - **guard clauses** without redundant checks
@@ -4270,6 +4616,10 @@ A strong Lily implementation should normally have:
 - generalized Luau iteration
 - no `pairs()` or `ipairs()`
 - strong Luau typing
+- explicit types on all directly typeable declarations
+- strictly typed tables
+- `any` disallowed unless functionality genuinely requires it
+- unions and intersections used only with immediately clear justification
 - **Attributes** for lightweight Instance metadata
 - **Script-created runtime infrastructure**, including networking objects, runtime folders, bindables, and UI
 - **Lily-owned packages** only
@@ -4286,3 +4636,4 @@ A strong Lily implementation should normally have:
 > ## Lily Studio standard
 >
 > **Write code that another Lily developer can understand quickly, trust immediately, and maintain safely.**
+````
