@@ -1238,50 +1238,95 @@ This symmetry makes memory behavior easier to reason about and reduces the chanc
 
 ### 14. Naming
 
-Strong naming allows Lily code to explain much of itself before comments are needed. A developer should normally be able to understand the role of a value, function, callback, or owner from its name alone, especially when reading it at the call site.
+Naming is one of the most important standards in Lily Studio.
+
+A developer should be able to understand the role, ownership, and purpose of a value from its name before needing to inspect its implementation.
+
+> **Hard rule:** All Lily-owned code identifiers use `camelCase`.
+
+This includes:
+
+- variables
+- functions
+- methods
+- parameters
+- callbacks
+- table fields
+- module fields
+- public API names
+- types
+- constants
+- configuration values
+- state fields
+- cache names
+- connection names
+- helper names
+
+Lily does not switch to `PascalCase`, `snake_case`, or `SCREAMING_SNAKE_CASE` for different categories of internal identifiers.
 
 ---
 
-#### 14.1 Use `camelCase`
-
-Normal Lily variables, functions, fields, and module methods use `camelCase`.
+#### 14.1 Use `camelCase` for Everything Lily Owns
 
 **Preferred**
 
 ```lua
-local fooValue
-local activeFoo
-local selectedBars
-local fooController
+local profileToken
+local selectedItems
+local currentValue
+local maximumAttempts
 
-local function updateFoo()
+type profileContext = {
+	name: string,
+	isEnabled: boolean,
+}
+
+local function updateProfileState()
 end
 
-function module.setFooValue()
+function module.getProfile()
 end
 ```
 
 **Avoid**
 
 ```lua
-local FooValue
-local selected_bars
-local FOO_VALUE
+local ProfileToken
+local selected_items
+local CURRENT_VALUE
+local MAXIMUM_ATTEMPTS
+
+type ProfileContext = {
+	Name: string,
+	IsEnabled: boolean,
+}
+
+local function UpdateProfileState()
+end
+
+function module.GetProfile()
+end
 ```
+
+> **Rule:** Do not change casing conventions based on whether an identifier is a variable, function, type, constant, module field, or public method. Lily-owned identifiers remain `camelCase`.
 
 ---
 
 #### 14.2 Use Full and Descriptive Words
 
-Names should be long enough to clearly explain their meaning, and unnecessary abbreviations should be avoided because they make larger files slower to scan and reason about.
+Naming should favor clarity over shortness.
+
+Do not abbreviate Lily-owned identifiers merely to reduce character count.
 
 **Preferred**
 
 ```lua
 local connection
 local controller
-local selectedBars
+local selectedItems
 local currentValue
+local profileContext
+local remoteFolder
 ```
 
 **Avoid**
@@ -1291,16 +1336,64 @@ local conn
 local ctrl
 local sel
 local val
+local ctx
+local rf
 ```
 
-> **Hard rule:** Lily Studio does not abbreviate identifiers. Use the complete descriptive name every time.
-**Lily Studio does not abbreviate names.** Variables, functions, fields, modules, types, callbacks, configuration values, and other identifiers should use the full descriptive word instead of shortened forms, even when an abbreviation may be commonly understood.
+> **Hard rule:** Lily Studio does not abbreviate meaningful internal identifiers. Use the complete descriptive name.
+
+Short names are acceptable only when the meaning is universally obvious inside a very small scope.
+
+**Acceptable**
+
+```lua
+for index, value in values do
+end
+
+local x = position.X
+local y = position.Y
+```
+
+Do not shorten a meaningful name simply because it appears often.
 
 ---
 
-#### 14.3 Boolean Names Should Read Like Questions
+#### 14.3 Names Must Communicate Meaning and Ownership
 
-Boolean values should sound like something that can naturally be answered with yes or no.
+Avoid vague names when a more specific name is available.
+
+**Preferred**
+
+```lua
+local profileConnections = {}
+local pendingRequests = {}
+local selectedItems = {}
+local accessPermissions = {}
+```
+
+**Avoid**
+
+```lua
+local data = {}
+local stuff = {}
+local things = {}
+local temp = {}
+```
+
+Generic names such as `data`, `value`, `result`, or `context` are acceptable when the surrounding scope already makes their meaning immediately obvious.
+
+A name should answer as many of these questions as reasonably possible:
+
+1. What does this value represent?
+2. Who owns it?
+3. What is it used for?
+4. Is it state, configuration, a dependency, or a temporary value?
+
+---
+
+#### 14.4 Boolean Names Should Read Like Questions
+
+Boolean values should clearly communicate true/false state.
 
 **Preferred**
 
@@ -1316,53 +1409,94 @@ These names make conditions read naturally:
 
 ```lua
 if hasAccess then
+end
 ```
+
+Avoid vague boolean names when a boolean prefix makes the purpose clearer.
 
 ---
 
-#### 14.4 Function Names Should Describe Actions
+#### 14.5 Function Names Should Describe Actions
 
-Functions should normally begin with a verb so the call site clearly describes what is happening.
+Functions should normally begin with a verb so the call site explains what is happening.
 
 **Preferred**
 
 ```lua
-updateFoo()
-createBar()
-destroyFoo()
-sendBaz()
+updateState()
+createProfile()
+destroyContext()
+sendRequest()
 resolveValue()
-releaseFoo()
+releaseConnection()
 ```
 
 **Avoid**
 
 ```lua
-foo()
-barThing()
+state()
+profileThing()
 valueData()
 ```
 
+The function name should describe the operation rather than only naming the object it works with.
+
 ---
 
-#### 14.5 Event Handlers Should Describe When They Run
+#### 14.6 Event Handlers Should Describe When They Run
 
-Event callbacks should use names that explain what event causes them to execute.
+Event callbacks should explain the event or timing that causes them to execute.
 
 **Preferred**
 
 ```lua
 onInputBegan()
 onInputEnded()
-onClick()
+onPlayerAdded()
 onRemoteEvent()
 onAttributeChanged()
 ```
 
-This style makes event wiring easier to read and retains handler names consistent across Lily projects.
+This keeps event wiring predictable and easy to scan.
 
 ---
 
+#### 14.7 Preserve Externally Owned Names
+
+The `camelCase` rule applies to names Lily owns.
+
+Do not rename Roblox API members, external protocol fields, serialized fields, existing required attributes, or other names whose spelling is controlled outside Lily.
+
+**Examples**
+
+```lua
+player.UserId
+part.CFrame
+remoteEvent.OnServerEvent
+```
+
+If an external contract requires a specific field name, preserve that contract even when it does not match Lily naming.
+
+> **Rule:** Lily-owned identifiers use `camelCase`. Externally owned names keep the spelling required by their owner.
+
+---
+
+#### 14.8 Naming Is Part of Code Quality
+
+Naming is not cosmetic.
+
+Poor names increase the amount of code a developer must inspect to understand behavior, ownership, state, and dependencies.
+
+Before accepting a name, ask:
+
+- is it `camelCase`?
+- is it descriptive?
+- is it unnecessarily abbreviated?
+- does it communicate what the value actually represents?
+- would the name still make sense at the call site?
+- does it match the responsibility of the code?
+
+> **Hard rule:** Do not sacrifice naming quality for shorter code. Clear naming is a core requirement of Lily Studio code.
 ### 15. Functions
 
 Once naming is clear, functions should remain focused enough that their purpose can be understood without tracing several unrelated operations or hidden state changes. Each Lily function should have a defined responsibility, a visible execution path, and behavior that can be explained clearly in a short description.
