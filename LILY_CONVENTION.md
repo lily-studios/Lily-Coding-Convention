@@ -620,7 +620,7 @@ A Lily package should:
 
 - have one clearly defined responsibility
 - expose a focused public API
-- use `--!strict` when practical
+- use `--!strict` only when the package is intentionally maintained with strict type checking
 - follow Lily naming and formatting
 - have a clear **lifecycle** if it creates runtime state
 - avoid hidden global state
@@ -1296,7 +1296,7 @@ local selected_items
 local CURRENT_VALUE
 local MAXIMUM_ATTEMPTS
 
-type ProfileContext = {
+type profileContext = {
 	Name: string,
 	IsEnabled: boolean,
 }
@@ -1901,7 +1901,7 @@ Important or reusable tables should use named Luau types so their expected struc
 **Preferred**
 
 ```lua
-type FooData = {
+type fooData = {
 	enabled: boolean,
 	name: string,
 	value: number,
@@ -2531,24 +2531,91 @@ Types and documentation should make an API easier to understand before it is use
 
 ### 24. Type Checking
 
-#### 24.1 Type Checking Is Selective
+Type checking in Lily Studio is selective.
 
-Not every Lily Studio file requires explicit Luau type checking.
+Not every file requires explicit Luau types, and not every file should use strict type checking.
 
-> **Rule:** Use type checking when it materially improves correctness, API clarity, reusable contracts, or editor support. Do not add types only because a file exists.
+> **Hard rule:** `--!strict` is used only when a file is intentionally written and maintained as strictly typed Luau.
 
-A file may remain untyped when:
+Do not add `--!strict` to a file merely because it is production code, a ModuleScript, or part of Lily Studio.
 
-- its data flow is simple and obvious
-- the implementation is local and self-contained
-- the values are already clear from Roblox APIs or nearby code
-- adding explicit types would create noise without improving correctness
-- the file is primarily straightforward UI, setup, event wiring, or orchestration code
-- the types would require large amounts of boilerplate for little practical benefit
+---
 
-Do not add `--!strict` automatically to every file.
+#### 24.1 Strict Mode Is Only for Strictly Typed Files
 
-Do not force type annotations onto every local variable, function parameter, callback, or table when the file does not benefit from them.
+A file using:
+
+```lua
+--!strict
+```
+
+must actually follow strict typing throughout the parts of the file that require it.
+
+Use `--!strict` when the file benefits from strong compile-time contracts, such as:
+
+- reusable libraries
+- shared APIs
+- engine internals
+- complex reusable state
+- important module contracts
+- code where strict type checking materially improves correctness
+
+Do not use `--!strict` as a decorative header.
+
+**Preferred for a strictly typed file**
+
+```lua
+--!strict
+
+type profileContext = {
+	name: string,
+	isEnabled: boolean,
+}
+
+local function getProfileName(context: profileContext): string
+	return context.name
+end
+```
+
+**Preferred for a file that does not need strict typing**
+
+```lua
+local function getProfileName(context)
+	return context.name
+end
+```
+
+**Avoid**
+
+```lua
+--!strict
+
+local function getProfileName(context)
+	return context.name
+end
+```
+
+when the file is not actually being maintained as a strictly typed file.
+
+> **Rule:** Strict mode and strict typing belong together.
+
+---
+
+#### 24.2 Explicit Typing Is Optional
+
+Lily Studio does not require every variable, function parameter, return value, callback, or table to have an explicit type.
+
+Use explicit types when they improve:
+
+- correctness
+- editor support
+- readability
+- reusable contracts
+- shared module boundaries
+- complex state definitions
+- non-obvious data structures
+
+Do not add types only to satisfy a formatting rule.
 
 **Acceptable**
 
@@ -2560,390 +2627,70 @@ local function getContext(profileToken)
 end
 ```
 
-**Also acceptable when the contract benefits from typing**
+**Also acceptable when an explicit contract is useful**
 
 ```lua
-type Context = {
+type profileContext = {
 	name: string,
-	enabled: boolean,
+	isEnabled: boolean,
 }
 
-local contexts: { [string]: Context } = {}
+local contexts: { [string]: profileContext } = {}
 
-local function getContext(profileToken: string): Context?
+local function getContext(profileToken: string): profileContext?
 	return contexts[profileToken]
 end
 ```
 
-The correct choice depends on the file's responsibility and complexity.
+The correct choice depends on the responsibility and complexity of the file.
 
-Type checking is especially useful for:
-
-- reusable module APIs
-- shared data contracts
-- complex state structures
-- engine internals
-- library code
-- public methods with meaningful contracts
-- values exchanged between modules when the contract would otherwise be unclear
-
-> **Hard rule:** Do not make code harder to read solely to satisfy a self-imposed typing requirement.
+> **Hard rule:** Do not make Lily code harder to read solely to increase the number of type annotations.
 
 ---
 
-Clear ownership and stable APIs are easier to maintain when their types are equally explicit. Type checking is part of the Lily Studio standard because it improves autocomplete, documents the expected shape of data, makes contracts easier to understand, and catches many mistakes before they reach runtime.
+#### 24.3 Tables Do Not Always Need Explicit Types
 
----
+Simple local tables may remain inferred.
 
-#### 24.1 Use `--!strict`
-
-Production Lily modules should normally begin with:
+**Acceptable**
 
 ```lua
---!strict
+local pendingRequests = {}
+local connections = {}
+local cachedValues = {}
 ```
 
-Strict mode helps catch invalid property access, incorrect arguments, missing fields, accidental `nil`, incorrect return values, and incorrect module usage before the code reaches runtime.
+Explicit table types are useful when the structure is important or reusable.
 
----
-
-#### 24.3 Type Function Parameters and Returns
-
-**Preferred**
+**Example**
 
 ```lua
-local function getFoo(fooKey: string): FooContext?
-	return fooContexts[fooKey]
-end
-```
-
-```lua
-function module.start(fooKey: string): boolean
-	return true
-end
-```
-
-Important public APIs should not rely on the reader guessing what type is expected.
-
----
-
-#### 24.2 Strict Type Declaration
-
-Lily Studio requires explicit type declarations throughout production Luau code.
-
-> **Hard rule:** All explicitly declared variables, function parameters, and function return values must have their types specified.
-**Preferred**
-
-```lua
-local fooName: string = "Foo"
-local fooEnabled: boolean = true
-local fooValue: number = 1
-
-local function updateFoo(fooValue: number): ()
-end
-```
-
-**Avoid**
-
-```lua
-local fooName = "Foo"
-local fooEnabled = true
-local fooValue = 1
-
-local function updateFoo(fooValue)
-end
-```
-
-The purpose of this rule is to make the expected type visible directly in the source instead of requiring another developer to rely on inference when reading the file.
-
-The primary exception is a local variable that exists only as a direct reference to an `Instance` already present in the Explorer hierarchy for the purpose of resolving or indexing its children.
-
-**Allowed Explorer Reference**
-
-```lua
-local source = replicatedStorage:WaitForChild("source")
-local library = source:WaitForChild("library")
-```
-
-These hierarchy references may remain inferred when adding an explicit `Instance` type would reduce useful child-indexing information or create unnecessary type friction.
-
-This exception should remain narrow. Once a value becomes normal runtime state, a reusable API value, a table field, or a function argument, it should follow the explicit typing standard.
-
-Some Luau syntax does not permit direct annotations on every introduced variable, such as generalized iteration variables. In those cases, the source collection must be typed so the iterator variables are inferred from a known type.
-
-**Preferred**
-
-```lua
-local fooNames: { string } = {
-	"Bar",
-	"Baz",
-	"Foo",
+type requestState = {
+	isPending: boolean,
+	requestId: string,
 }
 
-for _, fooName in fooNames do
-	print(fooName)
-end
+local requests: { [string]: requestState } = {}
 ```
 
-> **Rule:** If Luau allows the declaration to be typed directly, Lily types it directly. If the syntax does not allow direct annotation, the value must originate from a typed source.
+Use the type because the structure matters, not because every table must have one.
 
 ---
 
-#### 24.4 All Tables Must Be Strictly Typed
+#### 24.4 Derive Types From the Real Provider
 
-Every Lily table should have an explicit and predictable type.
+When Lily code receives data from another Lily module, inspect the module that actually creates or returns that data before defining a consumer type.
 
-> **Hard rule:** Important or reusable tables should be typed when the structure benefits from an explicit contract.
-This includes:
+Do not invent fields merely to make a broad generic structure.
 
-- configuration tables
-- runtime contexts
-- lookup tables
-- mappings
-- arrays
-- dictionaries
-- caches
-- registries
-- state tables
-- handler tables
-- payload structures created inside Lily code
-- reusable data objects
-
-**Preferred**
-
-```lua
-type FooData = {
-	enabled: boolean,
-	name: string,
-	value: number,
-}
-
-local fooData: FooData = {
-	enabled = true,
-	name = "Foo",
-	value = 1,
-}
-```
-
-For lightweight collections, inline table types are acceptable:
-
-```lua
-local fooNames: { string } = {}
-local fooByName: { [string]: FooData } = {}
-```
-
-When a table shape is reused or represents an architectural concept, prefer a named type instead of repeating an inline structure.
-
----
-
-#### 24.5 Use Named Types for Repeated Structures
-
-**Preferred**
-
-```lua
-export type FooData = {
-	enabled: boolean,
-	name: string,
-	value: number,
-}
-```
-
-```lua
-type FooContext = {
-	connections: { RBXScriptConnection },
-	destroyed: boolean,
-	value: number,
-}
-```
-
-Named types improve autocomplete and make large functions easier to read.
-
----
-
-#### 24.6 Export Types Only When Other Modules Need Them
-
-Use `export type` for types that are part of a module's public API. Internal implementation types should remain local.
-
----
-
-#### 24.7 Type Collections
-
-**Preferred**
-
-```lua
-local bars: { string } = {}
-local connections: { RBXScriptConnection } = {}
-local fooContexts: { [string]: FooContext } = {}
-```
-
-Typed collections prevent accidental insertion of incompatible values.
-
----
-
-#### 24.8 Use Optional Types Intentionally
-
-```lua
-local activeFooKey: string?
-```
-
-```lua
-local function getFoo(fooKey: string): FooContext?
-end
-```
-
-Do not make every value optional only to make the type checker stop reporting errors.
-
----
-
-#### 24.9 Narrow Types With Guard Clauses
-
-**Preferred**
-
-```lua
-local function useFoo(object: Instance?)
-	if not object then return end
-	if not object:IsA("RemoteEvent") then return end
-
-	object:FireServer()
-end
-```
-
-**guard clauses** work naturally with Luau type narrowing and also match Lily's flat control-flow style.
-
----
-
-#### 24.10 Optional Parameters Should Be Narrowed With Guards
-
-When a function parameter is intentionally optional, Lily should express that directly in the function signature and immediately narrow the value with a guard before using members that require the concrete type.
-
-**Preferred**
-
-```lua
-local function damageCharacter(character: Instance?)
-	if not character then return end
-
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	if not humanoid then return end
-
-	humanoid:TakeDamage(10)
-end
-```
-
-The `Instance?` annotation communicates that `nil` is a valid input possibility, while the guard establishes that `character` is an `Instance` for the remainder of the function.
-
-The same pattern applies to other optional parameters:
-
-```lua
-local function useRemote(remote: RemoteEvent?)
-	if not remote then return end
-
-	remote:FireAllClients()
-end
-```
-
-Do not remove the optional marker only to avoid writing the guard when the function can genuinely receive `nil`.
-
-Do not add `?` when the architecture guarantees that the argument is always present.
-
-> **Rule:** If a parameter may legitimately be absent, type it as optional and narrow it immediately with a guard. If the architecture guarantees the value, use the concrete type and do not add a redundant nil guard.
-
----
-
-#### 24.11 `any` and `unknown` Are Prohibited
-
-Lily Studio does not use `any` or `unknown` as placeholder types.
-
-> **Hard rule:** Lily Studio code must use the actual type required by the owning module, API, data structure, or runtime contract.
-
-Do not use `any` or `unknown`:
-
-- for variables
-- for function parameters
-- for return values
-- for callback signatures
-- for table fields
-- for module APIs
-- for remote payloads
-- for temporary values
-- to silence type errors
-- because the correct type has not been investigated yet
-
-When a value comes from another Lily module, inspect that module and type the value from the contract it actually provides.
-
-**Avoid**
-
-```lua
-type FooData = {
-	value: unknown,
-}
-```
-
-```lua
-local function updateFoo(value: any): ()
-end
-```
-
-**Preferred**
-
-If the owning module provides:
-
-```lua
-local bindings = {
-	[Enum.KeyCode.One] = {
-		action = "foo",
-		value = 1,
-	},
-}
-```
-
-represent the real contract:
-
-```lua
-type FooBinding = {
-	action: "foo",
-	value: number,
-}
-```
-
-If several valid shapes exist, use a precise union:
-
-```lua
-type Binding =
-	FooBinding
-	| BarBinding
-	| BazBinding
-```
-
-Before choosing a type, determine:
-
-1. which module creates the value
-2. which fields that module actually provides
-3. which values each field can contain
-4. whether a field is genuinely optional
-5. which runtime boundary may modify or omit the value
-
-Use concrete types, optional types, unions, generics, and strictly typed tables to represent that contract.
-
-Do not broaden a type only because a function is currently difficult to type. Fix the contract or narrow the implementation instead.
-
-> **Rule:** If Lily does not know the type yet, inspect the owner and determine it. `any` and `unknown` are not substitutes for understanding the data contract.
-
-
-
-#### 24.11.1 Derive Types From the Providing Module
-
-When Lily code receives data from another Lily module, the receiving code should inspect the module that creates or returns that data and define the type from the values that module actually provides.
-
-> **Hard rule:** Do not invent broad placeholder fields or generic fallback types for module-provided data. Type the real contract when typing is useful for that code.
-
-For example, if a module only provides:
+For example, if a provider returns:
 
 ```lua
 local entries = {
 	foo = {
 		kind = "primary",
 		name = "Foo",
-		enabled = true,
+		isEnabled = true,
 	},
 
 	bar = {
@@ -2954,124 +2701,146 @@ local entries = {
 }
 ```
 
-the consumer may define only the supported shapes:
+a typed consumer may define:
 
 ```lua
-type PrimaryEntry = {
+type primaryEntry = {
 	kind: "primary",
 	name: string,
-	enabled: boolean,
+	isEnabled: boolean,
 }
 
-type SecondaryEntry = {
+type secondaryEntry = {
 	kind: "secondary",
 	name: string,
 	count: number,
 }
 
-type Entry =
-	PrimaryEntry
-	| SecondaryEntry
+type entry =
+	primaryEntry
+	| secondaryEntry
 ```
 
-Do not write one broad structure such as:
+Do not write an inaccurate broad structure such as:
 
 ```lua
-type Entry = {
+type entry = {
 	kind: string?,
 	name: string?,
-	enabled: boolean?,
+	isEnabled: boolean?,
 	count: number?,
 	value: number?,
 	index: number?,
-	label: string?,
 }
 ```
 
-when the providing module does not actually produce all of those fields on one shared shape.
+when the provider does not actually produce one shared shape containing those optional fields.
 
 Before defining a receiving type:
 
-1. inspect the module that creates the value
+1. inspect the provider
 2. identify every valid returned shape
-3. identify which fields are always present
-4. identify which fields are genuinely optional
-5. identify literal values when they represent real variants
-6. represent multiple real shapes with a precise union when useful
-7. keep the consumer type synchronized with the provider contract
+3. identify fields that are always present
+4. identify fields that are genuinely optional
+5. preserve meaningful literal values
+6. use precise unions when multiple real variants exist
+7. keep the consumer synchronized with the provider
 
-This rule applies to:
+If the consumer does not benefit from explicit typing, it may remain untyped.
 
-- configuration modules
-- shared data modules
-- factories
-- controller return values
-- package APIs
-- state objects
-- reusable data tables
-- other Lily-owned module contracts
+> **Rule:** When types are used, they must describe the real contract rather than an invented approximation.
 
-If the receiving code does not benefit from explicit typing, it may remain untyped. The important rule is that Lily should not invent inaccurate or overly broad types simply to satisfy a typing requirement.
+---
 
-> **Rule:** The module that creates the data defines what the data can be. When types are used, consumers should represent that real contract accurately.
+#### 24.5 Avoid Escape-Hatch Types
 
+Lily Studio should not use broad escape-hatch types merely to silence the type checker.
 
-#### 24.12 Use Union and Intersection Types Sparingly
-
-Union (`|`) and intersection (`&`) types are allowed when they accurately represent the real contract of the code.
-
-They should not be introduced merely to satisfy the type checker or to compress several unrelated concepts into one declaration.
-
-**Allowed**
+Avoid:
 
 ```lua
-type FooMode = "On" | "Off"
+any
 ```
 
+and similarly broad placeholder typing when a real contract can be described.
+
+If a value cannot be typed accurately without creating misleading or excessive complexity, reconsider whether that file should be strictly typed at all.
+
+> **Rule:** Do not enable strict mode and then bypass it with inaccurate broad types.
+
+---
+
+#### 24.6 Runtime Validation Is Not the Same as Type Checking
+
+Runtime validation and Luau type annotations solve different problems.
+
+Use runtime checks when data can be invalid at runtime, especially when it comes from:
+
+- clients
+- remotes
+- attributes
+- JSON
+- external modules
+- user input
+- dynamic Roblox hierarchy state
+
+Example:
+
 ```lua
-type FooObject = BaseFoo & {
-	enabled: boolean,
+if type(profileName) ~= "string"
+	or profileName == ""
+then
+	return false
+end
+```
+
+A type annotation does not replace runtime validation when untrusted or dynamic data can still be invalid.
+
+Likewise, do not add unnecessary runtime `type()` checks only because a local variable is not explicitly annotated.
+
+> **Rule:** Validate values that can actually be wrong at runtime. Type values when static typing materially helps the code.
+
+---
+
+#### 24.7 Strictness Should Match the File
+
+Lily files may reasonably fall into different categories:
+
+**Untyped / inferred**
+
+```lua
+local function updateState(context, value)
+	context.value = value
+end
+```
+
+**Partially typed**
+
+```lua
+local function updateState(context, value: number)
+	context.value = value
+end
+```
+
+**Strictly typed**
+
+```lua
+--!strict
+
+type stateContext = {
+	value: number,
 }
+
+local function updateState(context: stateContext, value: number): ()
+	context.value = value
+end
 ```
 
-The reason for the union or intersection should be immediately understandable from the type name, surrounding API, or implementation.
+All three can be valid Lily code.
 
-> **Rule:** Use unions and intersections only when the underlying runtime contract genuinely requires them and their purpose is obvious at the point of use.
+The file should use the level of typing that best fits its responsibility.
 
----
-
-#### 24.13 Avoid Unsafe Casts
-
-**Avoid**
-
-```lua
-local foo = object :: RemoteEvent
-```
-
-when the type has not been established.
-
-**Preferred**
-
-```lua
-if not object:IsA("RemoteEvent") then return end
-
-local foo = object
-```
-
-Casts should be used only when the architecture genuinely guarantees the type and Luau cannot infer it.
-
----
-
-#### 24.14 Runtime Validation Still Matters
-
-Static typing cannot guarantee the shape of data that arrives from runtime boundaries such as RemoteEvents, **Attributes**, user input, JSON, or dynamically discovered Instances.
-
-Lily should still validate external data before trusting it.
-
-> **Rule:** Static types protect the codebase. Runtime validation protects runtime boundaries.
-
----
-
+> **Hard rule:** `--!strict` means the file is intentionally strict. If the file is not intentionally strict, do not add `--!strict`.
 ### 25. Comments and Documentation
 
 Types describe the shape of an API, while comments should document the information that names and types cannot communicate by themselves. A Lily comment must have a defined purpose and should help another developer understand intent, constraints, ordering, side effects, ownership, or non-obvious behavior.
@@ -3473,14 +3242,14 @@ Lily files should follow a consistent top-level structure so developers can quic
 
 | Order | Section |
 | ---: | --- |
-| 1 | `--!strict` |
+| 1 | `--!strict` only when the file intentionally uses strict type checking |
 | 2 | File description |
 | 3 | Roblox services |
 | 4 | Module table |
 | 5 | Constants and configuration |
 | 6 | State |
 | 7 | Dependencies |
-| 8 | Types |
+| 8 | Types, when used |
 | 9 | Private helpers |
 | 10 | Feature functions |
 | 11 | Public module methods |
@@ -3489,7 +3258,6 @@ Lily files should follow a consistent top-level structure so developers can quic
 **Example**
 
 ```lua
---!strict
 
 -- handles foo runtime
 
@@ -3514,7 +3282,7 @@ local source = replicatedStorage:WaitForChild("source")
 
 --————————————————————————————————————————————————————————————————————--
 
-type FooContext = {
+type fooContext = {
 	value: number,
 }
 
@@ -3535,7 +3303,6 @@ return module
 ```
 
 ---
-
 
 #### 27.1 Keep Top-Level Local Declarations at the Top
 
@@ -4912,7 +4679,6 @@ Do not force a value into a type that has not actually been established.
 ### 35. Example Lily Function
 
 ```lua
---!strict
 
 local function updateFooState(fooContext: FooContext, fooName: string, enabled: boolean)
 	fooContext.activeFoos[fooName] = nil
@@ -4936,7 +4702,6 @@ This follows the Lily convention because the function has one defined responsibi
 ### 36. Example Lily Module
 
 ```lua
---!strict
 
 -- handles foo runtime
 
@@ -4949,7 +4714,7 @@ local module = {}
 
 --————————————————————————————————————————————————————————————————————--
 
-type FooContext = {
+type fooContext = {
 	fooKey: string,
 	remote: RemoteEvent,
 }
@@ -4961,7 +4726,7 @@ local fooContexts: { [string]: FooContext } = {}
 
 --————————————————————————————————————————————————————————————————————--
 
-local function connect(signal: RBXScriptSignal, callback: (...any) -> ()): RBXScriptConnection
+local function connect(signal: RBXScriptSignal, callback: () -> ()): RBXScriptConnection
 	local connection = signal:Connect(callback)
 	connections[#connections + 1] = connection
 
