@@ -1784,6 +1784,253 @@ The helper should still have one clearly defined responsibility and should not e
 
 ---
 
+#### 19.1 Minimize Nested Executable Code
+
+Lily Studio strongly prefers flat executable code. Nesting should be minimized because each additional indentation level increases cognitive load, obscures execution paths, complicates cleanup, and makes ownership more difficult to reason about. Some nesting is unavoidable, so the goal is not absolute elimination; the goal is to keep every execution path as shallow and explicit as practical.
+
+> [!IMPORTANT]
+> [!IMPORTANT]
+> **Core rule:** **Lily code should use the least amount of executable nesting that is reasonably possible. Nesting is acceptable when removing it would reduce correctness, clarity, or maintainability.**
+
+This preference applies to:
+
+- nested `if` statements
+- nested loops
+- nested callbacks
+- nested anonymous functions
+- nested event handlers
+- deeply nested `pcall` or callback flows
+- control flow embedded inside other control flow
+- large blocks whose behavior depends on several indentation levels
+
+### **Avoid**
+
+```lua
+if foo then
+	for _, bar in bars do
+		if bar.enabled then
+			bar.event:Connect(function()
+				if baz then
+					updateFoo(bar)
+				end
+			end)
+		end
+	end
+end
+```
+
+### **Preferred**
+
+```lua
+if not foo then return end
+if not baz then return end
+
+for _, bar in bars do
+	if not bar.enabled then continue end
+
+	connectBar(bar)
+end
+```
+
+```lua
+local function connectBar(bar)
+	bar.event:Connect(function()
+		updateFoo(bar)
+	end)
+end
+```
+
+The preferred structure separates responsibilities and keeps the main execution path visually flat.
+
+---
+
+#### 19.2 Extract Nested Responsibilities Into Focused Helpers
+
+When a block begins requiring another layer of executable nesting, Lily should first consider moving that responsibility into a focused helper.
+
+### **Avoid**
+
+```lua
+for _, object in objects do
+	if object.enabled then
+		for _, value in object.values do
+			if value > 0 then
+				updateFoo(object, value)
+			end
+		end
+	end
+end
+```
+
+### **Preferred**
+
+```lua
+local function updateObject(object)
+	if not object.enabled then return end
+
+	for _, value in object.values do
+		if value <= 0 then continue end
+
+		updateFoo(object, value)
+	end
+end
+
+for _, object in objects do
+	updateObject(object)
+end
+```
+
+The purpose of extraction is not to create excessive numbers of helpers. It is to keep each execution path focused and understandable.
+
+---
+
+#### 19.3 Avoid Callback Pyramids
+
+Nested callbacks make lifecycle ownership, error handling, and cleanup difficult to follow.
+
+### **Avoid**
+
+```lua
+foo.Event:Connect(function()
+	bar.Event:Connect(function()
+		baz.Event:Connect(function()
+			updateFoo()
+		end)
+	end)
+end)
+```
+
+Lily should instead create each connection through a clear owner and keep event wiring at one predictable level.
+
+### **Preferred**
+
+```lua
+fooConnection = foo.Event:Connect(onFoo)
+barConnection = bar.Event:Connect(onBar)
+bazConnection = baz.Event:Connect(onBaz)
+```
+
+```lua
+local function onFoo()
+	updateFoo()
+end
+
+local function onBar()
+	updateBar()
+end
+
+local function onBaz()
+	updateBaz()
+end
+```
+
+---
+
+#### 19.4 Avoid Nested Loops Whenever Responsibilities Can Be Separated
+
+Nested loops are acceptable when the data relationship genuinely requires them and flattening would make the implementation less correct, less clear, or unnecessarily complex.
+
+Before writing a nested loop, consider whether the operation should instead use:
+
+- a precomputed lookup table
+- an index
+- a mapping
+- cached relationships
+- a focused helper
+- a separate processing pass
+- a more appropriate data structure
+
+> **Rule:** **Before accepting a nested loop, determine whether the data or execution path can be organized more clearly with a flatter structure. Keep the nesting when it is genuinely the clearest correct design.**
+
+---
+
+#### 19.5 Indentation Depth Is a Design Signal
+
+Increasing indentation should be treated as a design signal that responsibilities may be accumulating in one place.
+
+A Lily function should normally have a shallow visual structure:
+
+```text
+validate
+    ↓
+resolve
+    ↓
+perform
+    ↓
+return
+```
+
+rather than:
+
+```text
+if
+    ↓
+    loop
+        ↓
+        if
+            ↓
+            callback
+                ↓
+                condition
+```
+
+When indentation begins increasing, reconsider the design before adding another nested block. If the additional nesting is still the clearest and most correct structure after that review, it is acceptable.
+
+> **Rule:** **Lily does not use indentation as the primary way to organize complexity. Complexity should be separated through architecture, helpers, data structures, and explicit ownership.**
+
+---
+
+
+#### 19.7 Necessary Executable Nesting Is Allowed
+
+Lily does not require developers to force every function into a completely flat shape when doing so would damage the implementation.
+
+Executable nesting is acceptable when:
+
+- the relationship is inherently hierarchical
+- a nested loop directly represents the data relationship
+- extracting the logic would make ownership less clear
+- a helper would exist only to hide one trivial block
+- flattening would duplicate work or state
+- flattening would make control flow harder to understand
+- the nested form is materially easier to verify for correctness
+
+The standard is not **zero nesting**. The standard is **minimum necessary nesting**.
+
+### **Acceptable**
+
+```lua
+for _, foo in foos do
+	for _, bar in foo.bars do
+		updateBar(foo, bar)
+	end
+end
+```
+
+If the data model is naturally `foo -> bars`, this two-level iteration may be clearer than introducing indexes, temporary tables, or artificial helper functions purely to remove indentation.
+
+> **Rule:** **Do not flatten code mechanically. Prefer the shallowest structure that remains correct, readable, and faithful to the underlying data and ownership model.**
+
+---
+
+#### 19.6 Structural Nesting Is Different From Executable Nesting
+
+Some nesting is inherent to structured data and is not prohibited by this rule.
+
+The following remain valid when they represent real structure:
+
+- nested tables
+- typed table shapes
+- folder hierarchies
+- configuration trees
+- function-call arguments
+- returned data structures
+
+The restriction targets **nested executable behavior**, where one runtime path is embedded inside another.
+
+> **Final rule:** **Keep Lily execution paths as flat as reasonably possible. When nesting appears, first consider simplifying, extracting, reorganizing, or redesigning; retain the nesting only when it is genuinely necessary for correctness or clearer structure.**
+
+
 ### 20. Avoid `else` and `elseif`
 
 Lily prefers control flow that progresses downward in a direct and predictable path. `else` and `elseif` are avoided because they often introduce branch-heavy structures where an early return, guard clause, separate operation, or lookup table would express the same behavior more clearly.
