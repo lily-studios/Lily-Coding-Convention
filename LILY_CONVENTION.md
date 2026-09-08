@@ -2397,6 +2397,66 @@ Types and documentation should make an API easier to understand before it is use
 
 ### 24. Type Checking
 
+#### 24.1 Type Checking Is Selective
+
+Not every Lily Studio file requires explicit Luau type checking.
+
+> **Rule:** Use type checking when it materially improves correctness, API clarity, reusable contracts, or editor support. Do not add types only because a file exists.
+
+A file may remain untyped when:
+
+- its data flow is simple and obvious
+- the implementation is local and self-contained
+- the values are already clear from Roblox APIs or nearby code
+- adding explicit types would create noise without improving correctness
+- the file is primarily straightforward UI, setup, event wiring, or orchestration code
+- the types would require large amounts of boilerplate for little practical benefit
+
+Do not add `--!strict` automatically to every file.
+
+Do not force type annotations onto every local variable, function parameter, callback, or table when the file does not benefit from them.
+
+**Acceptable**
+
+```lua
+local contexts = {}
+
+local function getContext(profileToken)
+	return contexts[profileToken]
+end
+```
+
+**Also acceptable when the contract benefits from typing**
+
+```lua
+type Context = {
+	name: string,
+	enabled: boolean,
+}
+
+local contexts: { [string]: Context } = {}
+
+local function getContext(profileToken: string): Context?
+	return contexts[profileToken]
+end
+```
+
+The correct choice depends on the file's responsibility and complexity.
+
+Type checking is especially useful for:
+
+- reusable module APIs
+- shared data contracts
+- complex state structures
+- engine internals
+- library code
+- public methods with meaningful contracts
+- values exchanged between modules when the contract would otherwise be unclear
+
+> **Hard rule:** Do not make code harder to read solely to satisfy a self-imposed typing requirement.
+
+---
+
 Clear ownership and stable APIs are easier to maintain when their types are equally explicit. Type checking is part of the Lily Studio standard because it improves autocomplete, documents the expected shape of data, makes contracts easier to understand, and catches many mistakes before they reach runtime.
 
 ---
@@ -2499,7 +2559,7 @@ end
 
 Every Lily table should have an explicit and predictable type.
 
-> **Hard rule:** All tables must be strictly typed.
+> **Hard rule:** Important or reusable tables should be typed when the structure benefits from an explicit contract.
 This includes:
 
 - configuration tables
@@ -2740,92 +2800,87 @@ Do not broaden a type only because a function is currently difficult to type. Fi
 
 When Lily code receives data from another Lily module, the receiving code should inspect the module that creates or returns that data and define the type from the values that module actually provides.
 
-> **Hard rule:** Do not invent broad placeholder fields or generic fallback types for module-provided data. Type the real contract.
+> **Hard rule:** Do not invent broad placeholder fields or generic fallback types for module-provided data. Type the real contract when typing is useful for that code.
 
-For example, if a keybind module only provides:
+For example, if a module only provides:
 
 ```lua
-local bindings = {
-	[Enum.KeyCode.One] = {
-		action = "dimmer",
-		mode = "toggle",
-		offValue = 0,
-		onValue = 1,
+local entries = {
+	foo = {
+		kind = "primary",
+		name = "Foo",
+		enabled = true,
 	},
 
-	[Enum.KeyCode.Two] = {
-		action = "effect",
-		effectName = "foo",
-		mode = "hold",
+	bar = {
+		kind = "secondary",
+		name = "Bar",
+		count = 3,
 	},
 }
 ```
 
-the consumer should define only the supported shapes:
+the consumer may define only the supported shapes:
 
 ```lua
-type DimmerKeybind = {
-	action: "dimmer",
-	mode: "toggle",
-	offValue: number,
-	onValue: number,
+type PrimaryEntry = {
+	kind: "primary",
+	name: string,
+	enabled: boolean,
 }
 
-type EffectKeybind = {
-	action: "effect",
-	effectName: string,
-	mode: "hold",
+type SecondaryEntry = {
+	kind: "secondary",
+	name: string,
+	count: number,
 }
 
-type KeybindData =
-	DimmerKeybind
-	| EffectKeybind
+type Entry =
+	PrimaryEntry
+	| SecondaryEntry
 ```
 
-Do not write a broad structure such as:
+Do not write one broad structure such as:
 
 ```lua
-type KeybindData = {
-	action: string?,
-	effectName: string?,
-	mode: string?,
+type Entry = {
+	kind: string?,
+	name: string?,
+	enabled: boolean?,
+	count: number?,
 	value: number?,
-	offValue: number?,
-	onValue: number?,
-	positionIndex: number?,
-	speedMasterLink: number?,
-	zoomValue: number?,
+	index: number?,
+	label: string?,
 }
 ```
 
 when the providing module does not actually produce all of those fields on one shared shape.
 
-Before defining the receiving type:
+Before defining a receiving type:
 
 1. inspect the module that creates the value
 2. identify every valid returned shape
 3. identify which fields are always present
 4. identify which fields are genuinely optional
-5. identify literal values such as `"effect"`, `"hold"`, or `"toggle"`
-6. represent multiple real shapes with a precise union when necessary
+5. identify literal values when they represent real variants
+6. represent multiple real shapes with a precise union when useful
 7. keep the consumer type synchronized with the provider contract
 
 This rule applies to:
 
-- keybind definitions
-- effect definitions
 - configuration modules
-- profile modules
+- shared data modules
+- factories
 - controller return values
 - package APIs
-- factory functions
-- module state objects
-- shared data tables
-- any other Lily-owned module contract
+- state objects
+- reusable data tables
+- other Lily-owned module contracts
 
-> **Rule:** The module that creates the data defines what the data can be. Consumers should type that contract accurately instead of broadening it for convenience.
+If the receiving code does not benefit from explicit typing, it may remain untyped. The important rule is that Lily should not invent inaccurate or overly broad types simply to satisfy a typing requirement.
 
----
+> **Rule:** The module that creates the data defines what the data can be. When types are used, consumers should represent that real contract accurately.
+
 
 #### 24.12 Use Union and Intersection Types Sparingly
 
@@ -4849,6 +4904,7 @@ A strong Lily implementation should normally have:
 - explicit types on all directly typeable declarations
 - strictly typed tables
 - `any` and `unknown` are prohibited throughout Lily Studio code
+- type checking is selective and is not required for every Lily file
 - module-provided values are typed from the provider's actual contract
 - unions and intersections used only with immediately clear justification
 - **Attributes** for lightweight Instance metadata
