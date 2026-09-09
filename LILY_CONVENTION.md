@@ -13,8 +13,6 @@ Lily code should always favor **clarity, consistency, predictable behavior, simp
 > [!IMPORTANT]
 > **Lily Studio code should be direct, controlled, predictable, typed, efficient, and fully owned throughout its lifecycle.** Important behavior should never depend on hidden setup, accidental timing, unclear ownership, or uncontrolled background work.
 
-The wording used in Lily documentation should follow the same standard as the code itself: **precise, professional, technically accurate, and immediately understandable to another Lily Studio developer**. The convention should use established engineering terminology when that terminology improves precision, while avoiding unnecessary jargon, vague wording, or oversimplified language that weakens the meaning of a rule.
-
 ---
 
 ## Table of Contents
@@ -4781,45 +4779,6 @@ return module
 The important part is not the exact names in the example. The important part is the structure: strict typing, alphabetical top sections, flat control flow, focused helpers, clear **state ownership**, generalized iteration, predictable **lifecycle**, and a small public module API.
 
 ---
-
-### 37. Final Standard
-
-Lily Studio code should feel consistent regardless of which developer originally wrote it. A file should be straightforward to navigate, important behavior should be easy to locate, and the ownership and **lifecycle** of the system should remain clear without forcing the reader to trace hidden state through unrelated parts of the codebase.
-
-A strong Lily implementation should normally have:
-
-- clear names
-- block-based organization with compact related logic
-- descriptive names written in full
-- flat control flow
-- **guard clauses** without redundant checks
-- no **conditional nesting**
-- minimal use of `Script` and `LocalScript`
-- most behavior in **ModuleScripts**
-- **event-driven** state changes
-- generalized Luau iteration
-- no `pairs()` or `ipairs()`
-- strong Luau typing
-- explicit types on all directly typeable declarations
-- strictly typed tables
-- `any` and `unknown` are prohibited throughout Lily Studio code
-- type checking is selective and is not required for every Lily file
-- module-provided values are typed from the provider's actual contract
-- unions and intersections used only with immediately clear justification
-- **Attributes** for lightweight Instance metadata
-- **Script-created runtime infrastructure**, including networking objects, runtime folders, bindables, and UI
-- **Lily-owned packages** only
-- clean **lifecycle** ownership
-- aggressive **cleanup** of owned tables, stale references, caches, and registries
-- no unnecessary **background loops**, and every required loop has explicit ownership and **cleanup**
-- optimized runtime behavior with no uncontrolled memory growth or unnecessary **CPU usage**
-- no hierarchy discovery or yielding inside controlled loops
-- predictable top-level organization
-- top-level local declarations remain in the declaration sections near the top of the file
-- startup execution remains compact and does not introduce unnecessary temporary top-level state
-- alphabetical declarations inside logical sections
-- no uncontrolled third-party package dependencies
-- no hidden behavior changes during refactors
 
 > ## Lily Studio standard
 >
