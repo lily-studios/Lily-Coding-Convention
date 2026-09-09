@@ -4778,6 +4778,9 @@ return module
 
 The important part is not the exact names in the example. The important part is the structure: strict typing, alphabetical top sections, flat control flow, focused helpers, clear **state ownership**, generalized iteration, predictable **lifecycle**, and a small public module API.
 
+This convention is a general coding standard, not an absolute rule for every situation. If a rule cannot reasonably be followed because of Roblox limitations, legacy code, compatibility, performance, or correctness, it may be adapted for that specific case.
+
+Any exception should still keep the code as clear, predictable, maintainable, and safe as possible.
 ---
 
 > ## Lily Studio standard
