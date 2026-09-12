@@ -1,3 +1,4 @@
+````
 # Lily Studio Coding Convention
 
 > **Official coding standard for Lily Studio Roblox and Luau development.**
@@ -3946,7 +3947,7 @@ without needing to compare a separate manually edited Studio hierarchy.
 
 ## Performance and Scale
 
-Performance rules sit together because they describe how Lily controls repeated work, **CPU usage**, memory ownership, **cleanup**, scaling behavior, and Luau runtime limits without sacrificing correctness or readability.
+Performance rules sit together because they describe how Lily controls repeated work, **CPU usage**, idle runtime behavior, memory ownership, **cleanup**, scaling behavior, and Luau runtime limits without sacrificing correctness or readability.
 
 ### 32. Performance
 
@@ -4504,7 +4505,319 @@ Examples of weak fixes include:
 
 Lily Studio should correct the source of the waste whenever possible.
 
-> **Final performance rule:** Lily code should use only the CPU, memory, networking, and runtime work that the feature actually requires, and every allocated resource must have an intentional owner and **cleanup path**.
+> **Rule:** Lily code should use only the CPU, memory, networking, and runtime work that the feature actually requires, and every allocated resource must have an intentional owner and **cleanup path**.
+
+---
+
+#### 32.28 Idle Systems Must Be Dormant
+
+A Lily system that has no active work should not continue executing recurring runtime code merely because the system exists.
+
+A system is **idle** when no current interaction, animation, transition, scheduled operation, active request, stream, simulation, or state change requires processing.
+
+While idle, Lily should not continuously:
+
+- execute frame callbacks
+- poll state
+- inspect input state
+- rebuild or refresh UI
+- write unchanged Instance properties
+- resend unchanged network state
+- recalculate unchanged derived values
+- traverse the hierarchy looking for changes
+- process empty queues
+- recreate temporary tables or closures
+- advance timers that do not currently serve active work
+- run callbacks caused only by unrelated global activity
+
+Passive event subscriptions are allowed when they wake only because a relevant external state actually changed. Merely keeping an owned `RBXScriptConnection` registered does not violate the idle rule when that signal is naturally quiet and scoped to the state the system owns.
+
+> **Hard rule:** When a Lily feature has nothing to do, it must perform no self-generated or recurring runtime work.
+
+**Preferred idle model**
+
+```text
+idle
+    ↓
+no recurring execution
+    ↓
+relevant event occurs
+    ↓
+perform required work once
+    ↓
+return to idle
+```
+
+---
+
+#### 32.29 An Early Return Does Not Make a High-Frequency Callback Idle
+
+A callback can still consume runtime time even when its first instruction immediately returns. If the signal itself fires frequently, leaving the connection active still wakes the Lua callback repeatedly.
+
+**Avoid**
+
+```lua
+fooContext.heartbeatConnection = runService.Heartbeat:Connect(function(deltaTime)
+	if not fooContext.isActive then return end
+	updateFoo(fooContext, deltaTime)
+end)
+```
+
+The callback above still runs every Heartbeat while inactive.
+
+The same problem can occur with frequently firing signals such as pointer movement, input-change streams, render or simulation updates, broad hierarchy changes, or other high-volume event sources.
+
+**Preferred**
+
+```lua
+local function stopFooRuntime(fooContext)
+	local connection = fooContext.heartbeatConnection
+	if not connection then return end
+
+	connection:Disconnect()
+	fooContext.heartbeatConnection = nil
+end
+
+local function startFooRuntime(fooContext)
+	if fooContext.heartbeatConnection then return end
+
+	fooContext.heartbeatConnection = runService.Heartbeat:Connect(function(deltaTime)
+		updateFoo(fooContext, deltaTime)
+	end)
+end
+```
+
+> **Rule:** If a high-frequency callback is unnecessary while inactive, disconnect it instead of keeping it alive behind a guard clause.
+
+---
+
+#### 32.30 Continuous Runtime Connections Exist Only While Continuous Work Is Active
+
+A continuous connection should normally be created when the feature enters the state that requires continuous work and disconnected as soon as that state ends.
+
+This applies to:
+
+- `RunService.Heartbeat`
+- drag or pointer movement tracking
+- continuous input streams
+- animation progression
+- simulation stepping
+- active interpolation
+- continuously sampled controls
+- queue processors that genuinely need repeated execution
+- any other callback source that can fire repeatedly without a new meaningful state transition
+
+The lifetime of the module or UI is not automatically the lifetime of its continuous work.
+
+**Preferred flow**
+
+```text
+feature becomes active
+    ↓
+connect continuous runtime signal
+    ↓
+perform continuous work
+    ↓
+feature becomes inactive
+    ↓
+disconnect continuous runtime signal
+    ↓
+remain dormant
+```
+
+> **Hard rule:** Continuous work follows the active state that requires it, not merely the existence of the owner.
+
+---
+
+#### 32.31 High-Frequency Input Listeners Should Be Temporary or Centralized
+
+Signals that can fire for every pointer movement, analog change, drag update, touch movement, camera movement, or similar high-frequency input should not remain independently connected across many inactive controls.
+
+For interaction-specific work, Lily should normally:
+
+1. connect the high-frequency listener when the interaction begins
+2. store the connection under the interaction owner
+3. process only the active interaction
+4. disconnect the listener immediately when the interaction ends, is cancelled, loses focus, becomes hidden, or is destroyed
+
+A permanent global input listener is acceptable only when the system genuinely needs to observe global input while idle, such as a centralized keybind router. In that case, one controlled owner should route the input instead of every feature creating its own global listener.
+
+> **Rule:** Prefer one intentional input owner over many dormant features waking for unrelated user input.
+
+---
+
+#### 32.32 Broad Watchers Must Be Narrowed to the Smallest Useful Scope
+
+A broad event source can wake a system because unrelated parts of the experience changed. Lily should subscribe to the closest event source that fully represents the dependency.
+
+Broad watchers that require extra scrutiny include:
+
+- `game.DescendantAdded`
+- `game.DescendantRemoving`
+- `workspace.DescendantAdded`
+- `workspace.DescendantRemoving`
+- `ReplicatedStorage.DescendantAdded`
+- `ReplicatedStorage.DescendantRemoving`
+- broad `Changed` signals when one property signal is available
+- global input streams when one control owns the interaction
+- collection or registry signals covering substantially more state than the feature needs
+
+**Prefer** a direct child, attribute, property, tag, remote, or owner-specific signal whenever it can express the same transition.
+
+If a broad watcher is genuinely necessary during discovery or recovery, it should be disconnected as soon as the required dependency is resolved unless continued observation is part of the feature's actual responsibility.
+
+> **Rule:** Do not make a small feature wake because the entire game changed somewhere unrelated.
+
+---
+
+#### 32.33 Deferred and Scheduled Work Must Not Create Idle Churn
+
+`task.defer()` and `task.delay()` are valid for one-shot scheduling when the operation genuinely needs deferred execution. They must not be used to create hidden polling, self-rescheduling refresh loops, or repeated idle wakeups.
+
+Lily should:
+
+- coalesce duplicate queued work
+- keep at most one pending task when one result is sufficient
+- cancel owned delayed work when it becomes invalid
+- invalidate stale generations before their callbacks mutate state
+- avoid self-rescheduling callbacks unless the feature genuinely requires recurring work
+- stop recurring scheduled work when the active state ends
+
+**Avoid**
+
+```lua
+local function refreshLater()
+	task.delay(.1, function()
+		refreshFoo()
+		refreshLater()
+	end)
+end
+```
+
+when an event can trigger `refreshFoo()` directly.
+
+> **Hard rule:** A Lily task must not repeatedly wake an otherwise idle system just to check whether work exists.
+
+---
+
+#### 32.34 Unchanged State Produces Zero Downstream Work
+
+State comparison should happen before expensive or externally visible work begins.
+
+When the resolved value has not changed, Lily should avoid unnecessary:
+
+- property writes
+- attribute writes
+- UI refreshes
+- layout rebuilds
+- callbacks
+- signal emission
+- remote sends
+- serialization
+- cache invalidation
+- table reconstruction
+- derived-value recalculation
+- runtime object updates
+
+**Preferred**
+
+```lua
+local function setFooValue(fooContext, value)
+	if fooContext.value == value then return false end
+
+	fooContext.value = value
+	updateFoo(fooContext)
+	return true
+end
+```
+
+If several derived values are involved, compare the resolved state or use a controlled dirty-state model before triggering downstream work.
+
+> **Hard rule:** No state change means no replication, no callback, no property update, and no runtime refresh unless an external contract explicitly requires one.
+
+---
+
+#### 32.35 Separate Lifetime Connections From Active-Work Connections
+
+Long-lived systems often need a small set of passive lifecycle listeners while only temporarily needing high-frequency runtime listeners. These responsibilities should not be mixed into one undifferentiated connection collection when separating them makes the active lifecycle clearer.
+
+A useful ownership shape is:
+
+```lua
+local fooContext = {
+	activeConnections = {},
+	connections = {},
+}
+```
+
+`connections` may own low-frequency lifecycle or state-change signals that remain valid for the owner lifetime. `activeConnections` owns listeners that exist only while a particular interaction or runtime mode is active.
+
+When the active state ends:
+
+```lua
+disconnectConnections(fooContext.activeConnections)
+```
+
+When the owner is destroyed, both groups are disconnected.
+
+> **Rule:** The active runtime lifecycle may be shorter than the owner lifecycle, and Lily should model that difference explicitly when it prevents idle work.
+
+---
+
+#### 32.36 Idle UI Must Not Keep Interaction Runtime Active
+
+A UI object may remain allocated without needing its interaction runtime to remain active.
+
+When an interface, modal, page, editor, tool, or control becomes hidden or inactive, Lily should stop any interaction-specific work that can still fire in the background. Depending on the feature, this may include:
+
+- drag tracking
+- pointer movement tracking
+- temporary keyboard capture
+- active fader or slider tracking
+- continuous preview updates
+- animation stepping
+- selection marquee updates
+- hover work that is irrelevant while hidden
+- delayed interaction callbacks
+
+Low-frequency lifecycle listeners may remain when they are needed to detect the next legitimate state transition.
+
+> **Rule:** Hidden or inactive UI should not retain active interaction runtime merely because its Instances still exist.
+
+---
+
+#### 32.37 Idle Runtime Must Be Verified During Review
+
+A performance review should test what a system does when nobody is using it, not only what it does under load.
+
+For a feature that should be dormant, verify that leaving it untouched does not produce a continuing stream of:
+
+- script callback executions
+- frame-rate work
+- remote traffic
+- property or attribute writes
+- UI rebuilds
+- hierarchy scans
+- queue processing
+- temporary allocations
+- growing tables
+- repeated setup
+- duplicate connections
+
+Useful idle tests include:
+
+- leave the feature untouched
+- move the pointer somewhere unrelated
+- generate unrelated keyboard or game input
+- change unrelated Instances elsewhere in the hierarchy
+- open and close the feature repeatedly
+- run setup more than once
+- destroy and recreate the owner
+- leave the system inactive after prior use
+
+An idle system may still wake for a legitimate relevant event. The requirement is that it must not create a **self-sustaining or unrelated recurring execution rate** when no work is required.
+
+> **Final performance rule:** Lily code should be event-driven by default, dormant while idle, active only for the lifetime of necessary work, and should use only the CPU, memory, networking, and runtime work that the feature actually requires. Every active resource must have an intentional owner, activation condition, deactivation condition, and **cleanup path**.
 
 ### 33. Luau Local and Register Limits
 
@@ -4590,6 +4903,33 @@ end
 ```
 
 Use the change source instead.
+
+---
+
+#### Idle callbacks kept alive behind guards
+
+```lua
+runService.Heartbeat:Connect(function(deltaTime)
+	if not isActive then return end
+	updateFoo(deltaTime)
+end)
+```
+
+If the callback is unnecessary while inactive, disconnect it instead of letting the signal wake Lua continuously.
+
+The same rule applies to high-frequency input, pointer movement, broad watchers, scheduled refresh callbacks, and other recurring sources.
+
+---
+
+#### Broad listeners for narrow responsibilities
+
+Do not subscribe a small feature to global input or hierarchy activity when a narrower owner-specific signal can represent the same change.
+
+---
+
+#### Hidden UI with active interaction runtime
+
+Do not keep drag, pointer, preview, animation, or other interaction-specific runtime active after the relevant interface becomes hidden or inactive.
 
 ---
 
@@ -4786,3 +5126,4 @@ Any exception should still keep the code as clear, predictable, maintainable, an
 > ## Lily Studio standard
 >
 > **Write code that another Lily developer can understand quickly, trust immediately, and maintain safely.**
+````
