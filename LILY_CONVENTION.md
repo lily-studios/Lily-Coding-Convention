@@ -1,4 +1,3 @@
-````
 # Lily Studio Coding Convention
 
 > **Official coding standard for Lily Studio Roblox and Luau development.**
@@ -5121,9 +5120,9 @@ The important part is not the exact names in the example. The important part is 
 This convention is a general coding standard, not an absolute rule for every situation. If a rule cannot reasonably be followed because of Roblox limitations, legacy code, compatibility, performance, or correctness, it may be adapted for that specific case.
 
 Any exception should still keep the code as clear, predictable, maintainable, and safe as possible.
+
 ---
 
 > ## Lily Studio standard
 >
 > **Write code that another Lily developer can understand quickly, trust immediately, and maintain safely.**
-````
